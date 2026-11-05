@@ -2,7 +2,7 @@
 const $=q=>document.querySelector(q),M=root.MetaRules;
 class MetaUI{
  constructor(ctx){this.ctx=ctx;this.tab='cursor';
-  $('#stage').insertAdjacentHTML('beforeend','<div class="meta-wallet"><span>局外金币 <b id="campaignCoins">0</b></span><button id="walletShopBtn">整军备战</button></div><section class="workshop-overlay hidden" id="upgradePanel" role="dialog" aria-modal="true" aria-label="局外升级"><header class="workshop-head"><div><h2>整军备战</h2><p>积累战后金币，磨炼六艺，固守山河</p></div><span class="workshop-coins">金币 <b id="shopCoins">0</b></span><button id="closeShopBtn" aria-label="关闭升级">×</button></header><nav class="workshop-tabs" aria-label="升级类别">'+[['cursor','光标六艺'],['wall','城防'],['troop','兵种'],['machine','采集机关']].map(([id,name])=>'<button data-shop-tab="'+id+'" aria-selected="'+(id==='cursor')+'">'+name+'</button>').join('')+'</nav><div class="upgrade-cards" id="upgradeCards"></div><p class="workshop-note" id="upgradeNote"></p></section>');
+  $('#stage').insertAdjacentHTML('beforeend','<div class="meta-wallet"><span>局外金币 <b id="campaignCoins">0</b></span><button id="walletShopBtn">整军备战</button></div><section class="workshop-overlay hidden" id="upgradePanel" role="dialog" aria-modal="true" aria-label="局外升级"><header class="workshop-head"><div><h2>整军备战</h2><p>积累战后金币，磨炼六艺，固守山河</p></div><span class="workshop-coins">金币 <b id="shopCoins">0</b></span><button id="closeShopBtn" aria-label="关闭升级">×</button></header><nav class="workshop-tabs" aria-label="升级类别">'+[['cursor','光标六艺'],['wall','城防'],['troop','兵种'],['machine','采集机关'],['reserve','开局储备']].map(([id,name])=>'<button data-shop-tab="'+id+'" aria-selected="'+(id==='cursor')+'">'+name+'</button>').join('')+'</nav><div class="upgrade-cards" id="upgradeCards"></div><p class="workshop-note" id="upgradeNote"></p></section>');
   $('.start-actions').insertAdjacentHTML('beforeend','<button id="workshopBtn" class="secondary">整军备战</button>');
   $('#endCard .result-actions').insertAdjacentHTML('beforeend','<button id="resultWorkshopBtn">整军备战</button>');
   for(const id of ['#walletShopBtn','#workshopBtn','#resultWorkshopBtn'])$(id).onclick=()=>this.open();$('#closeShopBtn').onclick=()=>this.close();
@@ -16,6 +16,9 @@ class MetaUI{
  close(){$('#upgradePanel').classList.add('hidden')}
  description(id,levels){const level=levels[id],n=Math.min(M.MAX_LEVEL,level+1),next={...levels,[id]:n},pct=v=>Math.round(v*100)+'%';
   if(id==='wall')return '城墙生命 '+M.wallHp(levels)+' → '+M.wallHp(next)+' · 3级解锁弓箭塔，6级解锁炮塔';
+  if(id==='prep'){const stage=this.ctx.stage();return '首波前 '+M.preparationTime(stage,levels)+(level<M.MAX_LEVEL?' → '+M.preparationTime(stage,next):'')+' 秒 · 波间时间不变';}
+  if(id==='mine'||id==='wood'){const label=id==='mine'?'矿石':'木材';return '悬停每秒约 '+M.gatherPerSecond(levels,id).toFixed(1)+(level<M.MAX_LEVEL?' → '+M.gatherPerSecond(next,id).toFixed(1):'')+' '+label;}
+  if(id==='startGold'||id==='startWood'){const stage=this.ctx.stage(),resource=id==='startGold'?'gold':'wood',label=id==='startGold'?'矿石':'木材',current=M.startingStock(stage,levels)[resource],after=M.startingStock(stage,next)[resource];return '每局开场 '+current+(level<M.MAX_LEVEL?' → '+after:'')+' '+label;}
   if(id==='attack')return '光标伤害 '+M.attackDamage(levels).toFixed(1)+' → '+M.attackDamage(next).toFixed(1)+'，同时缩短攻击间隔';
   if(['footman','archer','spearman','mage'].includes(id)){const a=M.unitBonus(levels,id),b=M.unitBonus(next,id);return '生命 '+pct(a.hp)+' → '+pct(b.hp)+' · 攻击 '+pct(a.damage)+' → '+pct(b.damage)+'（同类将领也获得加成）'}
   if(id.endsWith('Machine'))return '每台自动产出 '+M.machineRate(levels,id).toFixed(2)+' → '+M.machineRate(next,id).toFixed(2)+' / 秒 · 局内消耗矿石木材制作';

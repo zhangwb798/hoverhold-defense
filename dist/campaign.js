@@ -4,7 +4,7 @@
  const titles=['初守','鏖战','决战'];
  const levels=mapIds.flatMap((mapId,chapter)=>titles.map((title,tier)=>({
   id:chapter*3+tier,mapId,chapter:chapter+1,tier:tier+1,title,
-  waves:3+tier,duration:20,preparation:12,rest:7,
+  waves:3+tier,duration:20,preparation:30,rest:12,
   health:.85+(chapter*3+tier)*.065,speed:1+(chapter*3+tier)*.012,
   damage:.85+(chapter*3+tier)*.045,extraEnemies:chapter*2+tier*2,
   bruteChance:.025+(chapter*3+tier)*.009,gold:160,wood:120
