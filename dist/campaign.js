@@ -5,8 +5,8 @@
  const levels=mapIds.flatMap((mapId,chapter)=>titles.map((title,tier)=>({
   id:chapter*3+tier,mapId,chapter:chapter+1,tier:tier+1,title,
   waves:3+tier,duration:20,preparation:30,rest:12,
-  health:.85+(chapter*3+tier)*.065,speed:1+(chapter*3+tier)*.012,
-  damage:.85+(chapter*3+tier)*.045,extraEnemies:chapter*2+tier*2,
+  health:.90+(chapter*3+tier)*.075,speed:1.015+(chapter*3+tier)*.014,
+  damage:.90+(chapter*3+tier)*.050,extraEnemies:Math.max(chapter*2+tier*2,chapter?2+chapter*2:0),
   bruteChance:.025+(chapter*3+tier)*.009,gold:160,wood:120
  })));
  function read(raw){let input;try{input=JSON.parse(raw)}catch{}const stars=Array.from({length:15},(_,i)=>{const n=input?.stars?.[i];return Number.isInteger(n)?Math.max(0,Math.min(3,n)):0});let unlocked=0;while(unlocked<14&&stars[unlocked]>0)unlocked++;for(let i=unlocked+1;i<15;i++)stars[i]=0;return {version:1,stars,unlocked};}

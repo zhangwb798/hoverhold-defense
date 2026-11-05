@@ -9,7 +9,7 @@ const definitions=[
 const integer=(n,min,max,fallback=min)=>Number.isFinite(n)?Math.max(min,Math.min(max,Math.floor(n))):fallback;
 function read(raw,progress){let input;try{input=JSON.parse(raw)}catch{}const valid=input?.version===1,legacy=raw==null?(progress?.stars||[]).filter(n=>n>0).length:0;
  const levels=Object.fromEntries(definitions.map(d=>[d.id,integer(valid?input.levels?.[d.id]:1,1,MAX_LEVEL)]));
- return {version:1,coins:integer(valid?input.coins:legacy*90,0,MAX_COINS),levels,firstWins:Array.from({length:15},(_,i)=>valid?input.firstWins?.[i]===true:raw==null&&progress?.stars?.[i]>0),ledger:valid&&Array.isArray(input.ledger)?[...new Set(input.ledger.filter(x=>typeof x==='string'&&x.length>0&&x.length<100))].slice(-64):[]};
+ return {version:1,coins:integer(valid?input.coins:legacy*90,0,MAX_COINS),levels,achievements:root.AchievementRules.read(valid?input.achievements:null),firstWins:Array.from({length:15},(_,i)=>valid?input.firstWins?.[i]===true:raw==null&&progress?.stars?.[i]>0),ledger:valid&&Array.isArray(input.ledger)?[...new Set(input.ledger.filter(x=>typeof x==='string'&&x.length>0&&x.length<100))].slice(-64):[]};
 }
 function unlocks(progress,levels){const stars=progress?.stars||[];return {freeCamps:stars.slice(0,3).length===3&&stars.slice(0,3).every(n=>n>0),machines:stars.slice(0,6).length===6&&stars.slice(0,6).every(n=>n>0),arrowTower:levels.wall>=3,cannon:levels.wall>=6}}
 function cost(id,level){const d=definitions.find(d=>d.id===id);return d&&level<MAX_LEVEL?Math.round(d.base*Math.pow(1.43,Math.max(0,level-1))):null}
@@ -29,5 +29,5 @@ function settle(profile,battle){const out=read(JSON.stringify(profile)),id=battl
  const combat=kills*2+waves*12,clear=won?50+chapter*15+tier*5:0,firstBonus=first?90:0,participation=won?0:15,coins=combat+clear+firstBonus+participation;
  out.coins=Math.min(MAX_COINS,out.coins+coins);if(won)out.firstWins[stage]=true;out.ledger.push(id);out.ledger=out.ledger.slice(-64);return {ok:true,profile:out,coins,combat,clear,participation,firstBonus};
 }
-root.MetaRules={key,MAX_LEVEL,definitions,read,unlocks,cost,purchase,snapshot,rate,gatherIntervals,gatherYield,gatherPerSecond,preparationTime,wallHp,unitBonus,attackDamage,attackInterval,machineRate,startingStock,settle};
+root.MetaRules={key,MAX_LEVEL,MAX_COINS,definitions,read,unlocks,cost,purchase,snapshot,rate,gatherIntervals,gatherYield,gatherPerSecond,preparationTime,wallHp,unitBonus,attackDamage,attackInterval,machineRate,startingStock,settle};
 })(typeof window!=='undefined'?window:globalThis);

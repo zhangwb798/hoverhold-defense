@@ -1,16 +1,15 @@
 (function(root){'use strict';
-const $=q=>document.querySelector(q),M=root.MetaRules;
+const $=q=>document.querySelector(q),M=root.MetaRules,A=root.AchievementRules;
 class MetaUI{
- constructor(ctx){this.ctx=ctx;this.tab='cursor';
-  $('#stage').insertAdjacentHTML('beforeend','<div class="meta-wallet"><span>局外金币 <b id="campaignCoins">0</b></span><button id="walletShopBtn">整军备战</button></div><section class="workshop-overlay hidden" id="upgradePanel" role="dialog" aria-modal="true" aria-label="局外升级"><header class="workshop-head"><div><h2>整军备战</h2><p>积累战后金币，磨炼六艺，固守山河</p></div><span class="workshop-coins">金币 <b id="shopCoins">0</b></span><button id="closeShopBtn" aria-label="关闭升级">×</button></header><nav class="workshop-tabs" aria-label="升级类别">'+[['cursor','光标六艺'],['wall','城防'],['troop','兵种'],['machine','采集机关'],['reserve','开局储备']].map(([id,name])=>'<button data-shop-tab="'+id+'" aria-selected="'+(id==='cursor')+'">'+name+'</button>').join('')+'</nav><div class="upgrade-cards" id="upgradeCards"></div><p class="workshop-note" id="upgradeNote"></p></section>');
-  $('.start-actions').insertAdjacentHTML('beforeend','<button id="workshopBtn" class="secondary">整军备战</button>');
+ constructor(ctx){this.ctx=ctx;this.tab='cursor';this.achievementGroup='first';
+  $('#stage').insertAdjacentHTML('beforeend','<div class="meta-wallet"><span>局外金币 <b id="campaignCoins">0</b></span><button id="walletShopBtn">整军备战</button><button id="walletAchievementsBtn" aria-label="成就任务">成就</button></div><section class="workshop-overlay hidden" id="upgradePanel" role="dialog" aria-modal="true" aria-label="局外升级"><header class="workshop-head"><div><h2>整军备战</h2><p>积累战后金币，磨炼六艺，固守山河</p></div><span class="workshop-coins">金币 <b id="shopCoins">0</b></span><button id="closeShopBtn" aria-label="关闭升级">×</button></header><nav class="workshop-tabs" aria-label="升级类别">'+[['cursor','光标六艺'],['wall','城防'],['troop','兵种'],['machine','采集机关'],['reserve','开局储备'],['achievements','成就任务']].map(([id,name])=>'<button data-shop-tab="'+id+'" aria-selected="'+(id==='cursor')+'">'+name+'</button>').join('')+'</nav><div class="upgrade-cards" id="upgradeCards"></div><p class="workshop-note" id="upgradeNote"></p></section>');
   $('#endCard .result-actions').insertAdjacentHTML('beforeend','<button id="resultWorkshopBtn">整军备战</button>');
-  for(const id of ['#walletShopBtn','#workshopBtn','#resultWorkshopBtn'])$(id).onclick=()=>this.open();$('#closeShopBtn').onclick=()=>this.close();
+  for(const id of ['#walletShopBtn','#resultWorkshopBtn'])$(id).onclick=()=>this.open();$('#walletAchievementsBtn').onclick=()=>this.open('achievements');$('#closeShopBtn').onclick=()=>this.close();
   $('.workshop-tabs').onclick=e=>{const b=e.target.closest('[data-shop-tab]');if(b){this.tab=b.dataset.shopTab;this.render()}};
-  $('#upgradeCards').onclick=e=>{const b=e.target.closest('[data-upgrade]');if(!b||b.disabled)return;const r=ctx.purchase(b.dataset.upgrade);this.render();this.note(r.ok?'升级完成 · 下一局生效':r.reason,!r.ok)};
+  $('#upgradeCards').onclick=e=>{const filter=e.target.closest('[data-ach-group]'),claim=e.target.closest('[data-ach-claim]');if(filter){this.achievementGroup=filter.dataset.achGroup;this.render();return}if(claim&&!claim.disabled){const r=ctx.claim(claim.dataset.achClaim);this.render();this.note(r.ok?'成就奖励已领取 · +'+r.reward+' 金币':r.reason,!r.ok);return}const b=e.target.closest('[data-upgrade]');if(!b||b.disabled)return;const r=ctx.purchase(b.dataset.upgrade);this.render();this.note(r.ok?'升级完成 · 下一局生效':r.reason,!r.ok)};
   this.wallet();
  }
- wallet(){$('#campaignCoins').textContent=this.ctx.profile().coins;$('#shopCoins').textContent=this.ctx.profile().coins}
+ wallet(){$('#campaignCoins').textContent=this.ctx.profile().coins;$('#shopCoins').textContent=this.ctx.profile().coins;const n=A.available(this.ctx.profile().achievements).length;$('#walletAchievementsBtn').textContent=n?'成就 '+n:'成就'}
  note(message,error=false){$('#upgradeNote').textContent=message;$('#upgradeNote').classList.toggle('error',error)}
  open(tab){if(!this.ctx.allowed())return false;if(tab)this.tab=tab;$('#upgradePanel').classList.remove('hidden');this.render();return true}
  close(){$('#upgradePanel').classList.add('hidden')}
@@ -24,7 +23,13 @@ class MetaUI{
   if(id.endsWith('Machine'))return '每台自动产出 '+M.machineRate(levels,id).toFixed(2)+' → '+M.machineRate(next,id).toFixed(2)+' / 秒 · 局内消耗矿石木材制作';
   return (id==='heal'?'持续治疗效率':'工作效率')+' ×'+M.rate(levels,id).toFixed(2)+' → ×'+M.rate(next,id).toFixed(2);
  }
- render(){const p=this.ctx.profile(),u=M.unlocks(this.ctx.progress(),p.levels);this.wallet();$('#upgradePanel').dataset.tab=this.tab;document.querySelectorAll('[data-shop-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.shopTab===this.tab)));
+ renderAchievements(p){const state=p.achievements,ready=A.available(state).length,completed=state.claimed.length+ready;
+  const filters=Object.entries(A.groups).map(([id,label])=>'<button type="button" data-ach-group="'+id+'" aria-pressed="'+(id===this.achievementGroup)+'">'+label+'</button>').join('');
+  const cards=A.definitions.filter(d=>d.group===this.achievementGroup).map(d=>{const value=Math.min(d.target,state.stats[d.key]),claimed=state.claimed.includes(d.id),done=value>=d.target;return '<article class="achievement-card"><div><h3>'+d.title+'</h3><span>+'+d.reward+' 金币</span></div><p>'+d.detail+'</p><progress value="'+value+'" max="'+d.target+'" aria-label="'+d.title+'进度"></progress><footer><small>'+value+' / '+d.target+'</small><button type="button" data-ach-claim="'+d.id+'" '+(!done||claimed?'disabled':'')+'>'+ (claimed?'已领取':done?'领取':'进行中')+'</button></footer></article>'}).join('');
+  $('#upgradeCards').innerHTML='<div class="achievement-top"><b>已完成 '+completed+' / '+A.definitions.length+'</b><span>'+ready+' 项可领取</span></div><div class="achievement-filters" aria-label="成就分类">'+filters+'</div><div class="achievement-list">'+cards+'</div>';
+  this.note(this.ctx.warning()||'胜负结算后记录进度 · 单局招募取历史最高 · 奖励仅可领一次',!!this.ctx.warning());
+ }
+ render(){const p=this.ctx.profile(),u=M.unlocks(this.ctx.progress(),p.levels);this.wallet();$('#upgradePanel').dataset.tab=this.tab;document.querySelectorAll('[data-shop-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.shopTab===this.tab)));if(this.tab==='achievements'){this.renderAchievements(p);return}
   let html=M.definitions.filter(d=>d.category===this.tab).map(d=>{const level=p.levels[d.id],price=M.cost(d.id,level),locked=d.category==='machine'&&!u.machines,disabled=locked||price==null||p.coins<price;return '<article class="upgrade-card '+(locked?'locked':'')+'"><header><span class="upgrade-seal">'+d.seal+'</span><div><h3>'+d.name+'</h3><small>Lv.'+level+(level<M.MAX_LEVEL?' → Lv.'+(level+1):' · 满级')+'</small></div></header><p>'+this.description(d.id,p.levels)+'</p><button data-upgrade="'+d.id+'" '+(disabled?'disabled':'')+'>'+(locked?'通过第二章解锁':price==null?'已达满级':'升级 · '+price+' 金币'+(p.coins<price?'（不足）':''))+'</button></article>'}).join('');
   if(this.tab==='wall')html+=[['弓箭塔',3,'arrowTower','射程远、射速快，自动迎击敌人'],['炮塔',6,'cannon','范围炮击，适合拦截成群敌军']].map(([name,level,id,detail])=>'<article class="upgrade-card info"><header><span class="upgrade-seal">'+(level===3?'弩':'炮')+'</span><div><h3>'+name+'</h3><small>'+(u[id]?'已解锁 · 下一局可营建':'城墙达到 Lv.'+level+' 解锁')+'</small></div></header><p>'+detail+'。在局内消耗矿石、木材建造，最多各两座。</p></article>').join('');
   $('#upgradeCards').innerHTML=html;this.note(this.ctx.warning()||'金币在胜负结算时获得 · 升级在开局时固定，本局不会随击杀变化',!!this.ctx.warning());
