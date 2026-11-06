@@ -1,0 +1,4 @@
+.general-slot{display:grid;flex:1;min-width:0;gap:3px}.general-slot button{width:100%}.general-slot .general-order{padding:3px 2px;font:10px "Microsoft YaHei",sans-serif;background:#86663d}.general-slot .general-order:disabled{background:#e6dfc6;color:#777b64}.skill-meter{color:#486978;white-space:nowrap;font-size:10px}.workshop-overlay[data-tab=spells] .upgrade-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:900px){.general-slot .general-order,.skill-meter{font-size:8px}}
+@media(max-width:650px){.general-slot .general-order,.skill-meter{font-size:6px}.workshop-tabs button{font-size:8px}}
+.wave-skip{border:0;border-radius:6px;padding:4px 7px;margin:1px auto 3px;background:#e3ce97;color:#544622;font:700 10px "Microsoft YaHei",sans-serif;cursor:pointer}.wave-skip:not([hidden]){display:block}.wave-skip:disabled{opacity:.52;cursor:default}.wave-skip:focus-visible{outline:2px solid #fff5d7;outline-offset:2px}

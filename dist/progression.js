@@ -4,7 +4,8 @@ const definitions=[
  ['build','建造','cursor','筑',35],['wood','砍树','cursor','樵',35],['mine','挖矿','cursor','矿',35],['recruit','招兵','cursor','募',45],['attack','攻击','cursor','击',50],['heal','治疗','cursor','愈',45],
  ['wall','城墙','wall','城',75],['footman','剑士','troop','剑',60],['archer','弓手','troop','弓',60],['spearman','枪兵','troop','枪',65],['mage','法师','troop','法',70],
  ['oreMachine','采矿机关','machine','采',100],['woodMachine','伐木机关','machine','伐',100],
- ['startGold','开局矿石','reserve','矿',45],['startWood','开局木材','reserve','木',45],['prep','备战时间','reserve','时',60]
+ ['startGold','开局矿石','reserve','矿',45],['startWood','开局木材','reserve','木',45],['prep','备战时间','reserve','时',60],
+ ...Object.entries(root.CombatSkills.spells).map(([id,spell])=>[id,spell.name,'spells',spell.seal,spell.price])
 ].map(([id,name,category,seal,base])=>({id,name,category,seal,base}));
 const integer=(n,min,max,fallback=min)=>Number.isFinite(n)?Math.max(min,Math.min(max,Math.floor(n))):fallback;
 function read(raw,progress){let input;try{input=JSON.parse(raw)}catch{}const valid=input?.version===1,legacy=raw==null?(progress?.stars||[]).filter(n=>n>0).length:0;
@@ -25,7 +26,7 @@ function attackDamage(levels){return 5+(levels.attack-1)*1.5}
 function attackInterval(levels){return .42/(1+(levels.attack-1)*.05)}
 function machineRate(levels,type){return 1.5*(1+(levels[type]-1)*.22)}
 function startingStock(stage,levels){return {gold:stage.gold+(levels.startGold-1)*20,wood:stage.wood+(levels.startWood-1)*15}}
-function settle(profile,battle){const out=read(JSON.stringify(profile)),id=battle.id;if(typeof id!=='string'||!id||id.length>=100||out.ledger.includes(id))return {ok:false,profile:out,coins:0};const stage=integer(battle.stageId,0,14),kills=integer(battle.kills,0,10000),waves=integer(battle.wavesCleared,0,5),won=battle.won===true,first=won&&!out.firstWins[stage],chapter=Math.floor(stage/3)+1,tier=stage%3+1;
+function settle(profile,battle){const out=read(JSON.stringify(profile)),id=battle.id;if(typeof id!=='string'||!id||id.length>=100||out.ledger.includes(id))return {ok:false,profile:out,coins:0};const stage=integer(battle.stageId,0,14),kills=integer(battle.kills,0,10000),waves=integer(battle.wavesCleared,0,root.CampaignRules.levels[stage].waves),won=battle.won===true,first=won&&!out.firstWins[stage],chapter=Math.floor(stage/3)+1,tier=stage%3+1;
  const combat=kills*2+waves*12,clear=won?50+chapter*15+tier*5:0,firstBonus=first?90:0,participation=won?0:15,coins=combat+clear+firstBonus+participation;
  out.coins=Math.min(MAX_COINS,out.coins+coins);if(won)out.firstWins[stage]=true;out.ledger.push(id);out.ledger=out.ledger.slice(-64);return {ok:true,profile:out,coins,combat,clear,participation,firstBonus};
 }
