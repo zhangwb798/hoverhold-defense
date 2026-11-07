@@ -30,6 +30,10 @@ const cityBounds={
  desert:[412,315,930,620]
 };
 const targetCityArea=.07;
+// Trace the raised roof separately so the occluder never repaints the courtyard behind it.
+const gateRoofs={
+ mountain:[[278,490],[285,485],[296,484],[294,476],[301,469],[307,476],[376,464],[385,457],[392,456],[389,470],[395,477],[409,471],[416,468],[417,478],[411,488],[410,497],[379,508],[293,518],[281,508]]
+};
 // Scale from the original painting so the map's city framing cannot flatten resource props.
 const resourceScale=.84;
 // Share the extra ground across both sides without over-stretching a narrow map edge.
@@ -61,4 +65,5 @@ window.GAME_MAPS.forEach(m=>{
   };
  });
  m.gate=frame(raw.gate);m.courtyard=court.map(frame);
+ m.gateRoof=gateRoofs[m.id]?.map(frame);
 });

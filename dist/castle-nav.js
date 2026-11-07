@@ -24,7 +24,8 @@ function create(map){
  function egress(x,y,blocked){const ratio=scale/.9,options=[[0,37],[0,-37],[54,0],[-54,0],[40,34],[-40,34],[40,-34],[-40,-34]].map(([dx,dy])=>({x:x+dx*ratio,y:y+dy*ratio}));return options.filter(p=>interior(p)&&!blocked(p)).sort((a,b)=>distance(a,innerDoor)-distance(b,innerDoor))[0]||innerDoor}
  const occluders=[];
  inner.forEach((a,i)=>{const b=inner[(i+1)%inner.length],n=normal(a,b);if(n.y<.2)return;const footA=add(a,n,38*scale),footB=add(b,n,38*scale);occluders.push({depth:(footA.y+footB.y)/2,points:[{x:a.x,y:a.y-9*scale},{x:b.x,y:b.y-9*scale},footB,footA]})});
- occluders.push({depth:gate.y+2,points:[[-31,-72],[31,-72],[31,-13],[-31,-13]].map(([dx,dy])=>({x:gate.x+dx*scale,y:gate.y+dy*scale}))});
+ const gateRoof=map.gateRoof?.map(point)??[[-31,-72],[31,-72],[31,-13],[-31,-13]].map(([dx,dy])=>({x:gate.x+dx*scale,y:gate.y+dy*scale}));
+ occluders.push({depth:gate.y+2,points:gateRoof});
  return {inner,outer,portal,gate,innerDoor,outerDoor,attack,dir,interior,walkable,clear,route,waypoint,advance,egress,occluders};
 }
 root.CastleNav={create};
