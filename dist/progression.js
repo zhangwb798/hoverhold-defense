@@ -27,7 +27,7 @@ function attackInterval(levels){return .42/(1+(levels.attack-1)*.05)}
 function machineRate(levels,type){return 1.5*(1+(levels[type]-1)*.22)}
 function startingStock(stage,levels){return {gold:stage.gold+(levels.startGold-1)*20,wood:stage.wood+(levels.startWood-1)*15}}
 function settle(profile,battle){const out=read(JSON.stringify(profile)),id=battle.id;if(typeof id!=='string'||!id||id.length>=100||out.ledger.includes(id))return {ok:false,profile:out,coins:0};const stage=integer(battle.stageId,0,14),kills=integer(battle.kills,0,10000),waves=integer(battle.wavesCleared,0,root.CampaignRules.levels[stage].waves),won=battle.won===true,first=won&&!out.firstWins[stage],chapter=Math.floor(stage/3)+1,tier=stage%3+1;
- const combat=kills*2+waves*12,clear=won?50+chapter*15+tier*5:0,firstBonus=first?90:0,participation=won?0:15,coins=combat+clear+firstBonus+participation;
+ const combat=kills*2+waves*12,clear=won?50+chapter*15+tier*5:0,firstBonus=first?90:0,participation=won||battle.early?0:15,coins=combat+clear+firstBonus+participation;
  out.coins=Math.min(MAX_COINS,out.coins+coins);if(won)out.firstWins[stage]=true;out.ledger.push(id);out.ledger=out.ledger.slice(-64);return {ok:true,profile:out,coins,combat,clear,participation,firstBonus};
 }
 root.MetaRules={key,MAX_LEVEL,MAX_COINS,definitions,read,unlocks,cost,purchase,snapshot,rate,gatherIntervals,gatherYield,gatherPerSecond,preparationTime,wallHp,unitBonus,attackDamage,attackInterval,machineRate,startingStock,settle};
