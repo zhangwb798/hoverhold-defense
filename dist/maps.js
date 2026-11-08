@@ -64,6 +64,9 @@ window.GAME_MAPS.forEach(m=>{
    blendY:Math.max(halfH,cy-top,bottom-cy)*1.55
   };
  });
+ const marker=xy=>{const [x,y]=frame(xy);return {x,y}};
+ if(m.id==='island'){m.bridge=marker([754,405]);m.airEntry=frame([85,595]);}
+ if(m.id==='volcano')m.lava={...marker([690,320]),detour:marker([690,400])};
  m.gate=frame(raw.gate);m.courtyard=court.map(frame);
  m.gateRoof=gateRoofs[m.id]?.map(frame);
 });

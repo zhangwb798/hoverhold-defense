@@ -7,7 +7,7 @@
   <title>悬城守卫 · 云山营地</title>
   <meta name="robots" content="noindex,nofollow">
   <meta name="description" content="青山作伴，临溪筑营。在手绘国风的云山营地中采集、建设与守城。">
-  <link rel="stylesheet" href="styles.css?v=24"><link rel="stylesheet" href="qinglu.css?v=16"><link rel="stylesheet" href="campaign.css?v=16"><link rel="stylesheet" href="commands.css?v=20"><link rel="stylesheet" href="economy.css?v=36"><link rel="stylesheet" href="encounters.css?v=21"><link rel="stylesheet" href="achievements.css?v=25"><link rel="stylesheet" href="guide.css?v=26"><link rel="stylesheet" href="combat-skills.css?v=28">
+  <link rel="stylesheet" href="styles.css?v=24"><link rel="stylesheet" href="qinglu.css?v=16"><link rel="stylesheet" href="campaign.css?v=16"><link rel="stylesheet" href="commands.css?v=20"><link rel="stylesheet" href="economy.css?v=38"><link rel="stylesheet" href="encounters.css?v=21"><link rel="stylesheet" href="achievements.css?v=25"><link rel="stylesheet" href="guide.css?v=26"><link rel="stylesheet" href="combat-skills.css?v=28">
   <link rel="stylesheet" href="press-feedback.css?v=33">
 </head>
 <body><main class="game-shell"><section class="stage" id="stage">
@@ -16,6 +16,8 @@
   <aside class="tools" aria-label="快捷行动"><button data-action="mine"><i>◆</i><b>采矿</b><em>+</em></button><button data-action="wood"><i>♣</i><b>伐木</b><em>+</em></button><button data-action="footman"><i>⚔</i><b>剑士</b><em>+</em></button><button data-action="archer"><i>➶</i><b>弓手</b><em>+</em></button></aside>
   <div class="castle-life"><span>边关城防</span><div><i id="hpBar"></i></div><b id="hp">100</b></div>
   <div class="wave-card"><small>波次</small><strong><span id="wave">1</span><i>/ 3</i></strong><div class="wave-countdown" role="timer"><span id="waveClockLabel">首波准备</span><div><b id="waveClock">30</b><span>秒</span></div></div><button type="button" class="wave-skip" id="skipPreparation" hidden>跳过准备</button><em id="enemies">0 敌军</em></div>
+  <div id="trainingPanel" class="battle-training" hidden><span id="trainingText"></span><button id="skipTraining" type="button">跳过引导</button></div>
+  <div id="waveForecast" class="wave-forecast" hidden></div>
   <div class="hover-tip" id="hoverTip">悬停山林、矿洞、地基或敌军</div>
   <div class="modal" id="startCard"><button id="startBtn">开始战斗 <b>→</b></button></div>
   <div class="modal hidden" id="endCard"><div class="crest red">!</div><p>边关失守</p><h1>守到第 <span id="finalWave">1</span> 波</h1><div class="score" id="score"></div><button id="againBtn">再守山河 <b>↻</b></button></div>
@@ -40,5 +42,5 @@
     <div class="guide-footer"><button type="button" id="guidePrev">← 上一章</button><span id="guideCount" aria-live="polite">1 / 9</span><button type="button" id="guideNext">下一章 →</button></div>
   </div>
 </dialog>
-<script src="maps.js?v=34"></script><script src="campaign.js?v=32"></script><script src="animals.js?v=33"></script><script src="generals.js?v=18"></script><script src="motion-layout.js?v=19"></script><script src="walk-layout.js?v=20"></script><script src="motion.js?v=20"></script><script src="combat-skills.js?v=28"></script><script src="achievements.js?v=27"></script><script src="progression.js?v=36"></script><script src="facilities.js?v=29"></script><script src="meta-ui.js?v=28"></script><script src="encounter-layout.js?v=21"></script><script src="encounters.js?v=21"></script><script src="dock.js?v=21"></script><script src="castle-nav.js?v=34"></script><script src="game.js?v=37"></script><script src="guide.js?v=37"></script><script src="press-feedback.js?v=33"></script></body>
+<script src="maps.js?v=38"></script><script src="campaign.js?v=32"></script><script src="animals.js?v=33"></script><script src="generals.js?v=18"></script><script src="motion-layout.js?v=19"></script><script src="walk-layout.js?v=20"></script><script src="motion.js?v=20"></script><script src="combat-skills.js?v=28"></script><script src="achievements.js?v=27"></script><script src="progression.js?v=36"></script><script src="facilities.js?v=29"></script><script src="meta-ui.js?v=28"></script><script src="encounter-layout.js?v=21"></script><script src="encounters.js?v=38"></script><script src="dock.js?v=21"></script><script src="castle-nav.js?v=34"></script><script src="game.js?v=40"></script><script src="guide.js?v=38"></script><script src="press-feedback.js?v=33"></script></body>
 </html>

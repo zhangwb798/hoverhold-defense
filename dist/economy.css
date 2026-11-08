@@ -6,6 +6,46 @@
 .wave-countdown{margin:4px auto 3px;padding:5px 0 3px;color:#ffe8b1;border-top:1px solid #e3edd347;font:10px "Microsoft YaHei",sans-serif;line-height:1.2}.wave-countdown>span{display:block;color:#e1edce;letter-spacing:.1em}.wave-countdown>div{display:flex;align-items:baseline;justify-content:center;gap:3px}.wave-countdown b{font:700 26px/1.08 "Segoe UI",sans-serif;font-variant-numeric:tabular-nums}.wave-countdown>div span{font-size:9px}.workshop-overlay[data-tab=reserve] .upgrade-cards{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
 
 #stage:not(.playing) :is(.logo, .resources, .castle-life, .wave-card) { display: none; }
+
+.battle-training, .wave-forecast {
+  position: absolute;
+  z-index: 13;
+  color: #fff4d6;
+  background: #365b4de8;
+  border-radius: 8px;
+  font: 13px KaiTi, serif;
+}
+.battle-training {
+  top: 108px;
+  left: 50%;
+  width: max-content;
+  max-width: 78%;
+  transform: translateX(-50%);
+  padding: 7px 11px;
+}
+.battle-training button {
+  margin-left: 9px;
+  padding: 3px 7px;
+  border: 0;
+  border-radius: 5px;
+  background: #ffebc4;
+  color: #405e51;
+  cursor: pointer;
+}
+.wave-forecast {
+  right: 24px;
+  bottom: 167px;
+  max-width: 56%;
+  padding: 5px 8px;
+}
+@media (max-width: 1050px) {
+  .battle-training { top: 92px; }
+  .wave-forecast { right: 13px; bottom: 137px; }
+}
+@media (max-width: 650px) {
+  .battle-training { top: 41px; max-width: 94%; font-size: 10px; padding: 4px 6px; }
+  .wave-forecast { right: 6px; bottom: 87px; font-size: 9px; }
+}
 .meta-wallet { top: 10px; }
 .hud .controls { margin-left: auto; }
 
