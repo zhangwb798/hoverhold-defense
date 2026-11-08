@@ -55,12 +55,12 @@ function encounterIntel(stage){const notes=[];if(encounterRules.flyerCount(stage
 function spawnFlyer(){const cfg=flyerTypes[activeMap.id];if(s.stage.chapter<3||!cfg)return false;const pt=spawns[s.flyersSent%spawns.length],hp=cfg.hp*s.stage.health*(1+wavePressure()*.08),e={type:'flyer',mapKey:activeMap.id,x:pt[0],y:pt[1],hp,max:hp,speed:cfg.speed*s.stage.speed,cd:.5,flash:0,focus:0,phase:rnd(0,6.28),moving:false,attack:0,hit:0,face:gate.x>pt[0]?1:-1};s.enemies.push(e);s.flyersSent++;s.raidAlert=2.4;$('#raidAlert').textContent='空袭 · '+cfg.name+'！弓手、法师与弓箭塔迎击';return e}
 function spawnBoss(){if(!encounterRules.hasBoss(s.stage)||s.bossSpawned)return false;const cfg=bossTypes[activeMap.id],pt=spawns[0],hp=Math.round(cfg.hp*s.stage.health),e={type:'boss',mapKey:activeMap.id,x:pt[0],y:pt[1],hp,max:hp,speed:cfg.speed*s.stage.speed,cd:1,flash:0,focus:0,phase:rnd(0,6.28),walkPhase:0,moving:false,attack:0,hit:0,face:gate.x>pt[0]?1:-1,skillTimer:4.5,enraged:false};s.bossSpawned=true;s.enemies.push(e);s.raidAlert=0;s.shake=.5;text(640,210,'决战首领 · '+cfg.name,cfg.color);beep(95,.25,'sawtooth');syncBoss();return e}
 function inBlast(point,area){return Math.hypot(point.x-area.x,(point.y-area.y)/.6)<=area.radius}
-function updateFlyer(e,dt){const cfg=flyerTypes[e.mapKey];if(e.airStrike){e.airStrike.delay-=dt;if(e.airStrike.delay<=0){const target=e.airStrike.target;e.airStrike=null;const damage=Math.round(cfg.damage*s.stage.damage*1.18);if(target){if(target.hp>0&&s.units.includes(target)&&dist(e,target)<110){target.hp-=damage;target.hit=.2;s.fx.push({kind:'magic',x:target.x,y:target.y-20,vx:0,vy:-12,life:.25,max:.25,color:cfg.color})}}else if(dist(e,gate)<56){s.hp-=damage;text(gate.x,gate.y-38,'空袭 -'+damage,'#e7b46b');s.shake=.2}}}if(e.attack>0)return;let target=null,near=80;s.units.forEach(u=>{const d=dist(e,u);if(u.hp>0&&['archer','mage'].includes(u.type)&&d<near){target=u;near=d}});const d=dist(e,gate);if(target||d<42){if(e.cd<=0){e.attackSpan=.6;e.attack=.6;e.cd=cfg.interval;e.airStrike={target,delay:.3};e.face=(target?.x??gate.x)>=e.x?1:-1}return}const dx=gate.x-e.x,dy=gate.y-e.y,move=Math.min(e.speed*dt,d-40);e.x+=dx/d*move;e.y+=dy/d*move;e.face=dx>=0?1:-1;e.moving=true}
+function updateFlyer(e,dt){const cfg=flyerTypes[e.mapKey];if(e.airStrike){e.airStrike.delay-=dt;if(e.airStrike.delay<=0){const target=e.airStrike.target;e.airStrike=null;const damage=Math.round(cfg.damage*s.stage.damage*1.18);if(target){if(target.hp>0&&s.units.includes(target)&&dist(e,target)<110){target.hp-=damage;target.hit=.2;s.fx.push({kind:'magic',x:target.x,y:target.y-20,vx:0,vy:-12,life:.25,max:.25,color:cfg.color})}}else if(dist(e,gate)<56){s.hp-=damage;text(gate.x,gate.y-38,'空袭 -'+damage,'#e7b46b');s.shake=.2}}}if(e.attack>0)return;const target=nearestAlly(e,150,false),goal=target||gate,d=dist(e,goal),reach=target?80:42;if(d<reach){if(e.cd<=0){e.attackSpan=.6;e.attack=.6;e.cd=cfg.interval;e.airStrike={target,delay:.3};e.face=(target?.x??gate.x)>=e.x?1:-1}return}const dx=goal.x-e.x,dy=goal.y-e.y,move=Math.min(e.speed*dt,d-reach+2);e.x+=dx/d*move;e.y+=dy/d*move;e.face=dx>=0?1:-1;e.moving=true}
 function chooseBossTarget(){const live=s.units.filter(u=>u.hp>0);if(!live.length)return {...gate};let best=live[0],count=-1;live.forEach(u=>{const nearby=live.filter(v=>Math.hypot(v.x-u.x,(v.y-u.y)/.6)<60).length;if(nearby>count){count=nearby;best=u}});return {x:best.x,y:best.y}}
 function beginBossSkill(e){if(e.hp<=0)return false;const cfg=bossTypes[e.mapKey],point=chooseBossTarget();e.skill={x:point.x,y:point.y,radius:cfg.radius,timer:cfg.warning,duration:cfg.warning};e.strike=null;e.attack=0;e.moving=false;text(point.x,point.y-48,cfg.skill+' · 移出预警范围',cfg.color);return true}
 function releaseBossSkill(e){const cfg=bossTypes[e.mapKey],area=e.skill;if(!area||e.hp<=0)return false;const damage=Math.round(cfg.skillDamage*s.stage.damage*1.18);s.units.forEach(u=>{if(u.hp<=0||!inBlast(u,area))return;u.hp-=damage;u.hit=.25;if(e.mapKey==='forest')u.slow=1.2;if(e.mapKey==='island'){const dx=u.x-area.x,dy=u.y-area.y,n=Math.hypot(dx,dy)||1;s.wall.advance(u,{x:u.x+dx/n*14,y:u.y+dy/n*14},14)}});if(inBlast(gate,area)){const hit=Math.round(damage*.4);s.hp-=hit;text(gate.x,gate.y-50,cfg.skill+' -'+hit,'#eab16f')}if(cfg.hazard)s.hazards.push({...area,life:cfg.hazard,max:cfg.hazard,damage:cfg.hazardDamage*s.stage.damage,color:cfg.color,mapKey:e.mapKey});s.fx.push({kind:'impact',x:area.x,y:area.y,life:.65,max:.65,color:cfg.color});burst(area.x,area.y,cfg.color,24);s.shake=.5;e.skill=null;e.skillTimer=cfg.cooldown*(e.enraged?.8:1);e.attackSpan=.8;e.attack=.8;e.skillRelease=true;return true}
 function bossStrike(e,target){if(e.hp<=0)return;const cfg=bossTypes[e.mapKey],damage=Math.round(cfg.damage*s.stage.damage*1.18*(e.enraged?1.15:1));if(target){if(target.hp<=0||!s.units.includes(target)||dist(e,target)>cfg.reach+20||!s.wall.clear(e,target))return;target.hp-=damage;target.hit=.25;s.units.forEach(u=>{if(u!==target&&u.hp>0&&dist(u,target)<45&&s.wall.clear(target,u)){u.hp-=damage*.3;u.hit=.18}})}else if(groundAtGate(e,34)){s.hp-=damage;text(gate.x,gate.y-48,'首领 -'+damage,'#eeb373')}s.shake=.35}
-function updateBoss(e,dt){const cfg=bossTypes[e.mapKey];if(!e.enraged&&e.hp<=e.max*.5){e.enraged=true;text(e.x,e.y-95,'首领狂怒 · 攻势加快','#e6ae69');s.shake=.4}if(e.skill){e.skill.timer-=dt;if(e.skill.timer<=0)releaseBossSkill(e);return}if(e.strike){e.strike.delay-=dt;if(e.strike.delay<=0){const target=e.strike.target;e.strike=null;bossStrike(e,target)}}e.skillTimer-=dt;if(e.attack>0)return;if(e.skillTimer<=0){beginBossSkill(e);return}let target=null,near=cfg.reach;s.units.forEach(u=>{const d=dist(e,u);if(u.hp>0&&d<near&&s.wall.clear(e,u)){target=u;near=d}});if(target||groundAtGate(e,27)){if(e.cd<=0){e.skillRelease=false;e.attackSpan=1.1;e.attack=1.1;e.cd=cfg.interval*(e.enraged?.8:1);e.strike={target,delay:.55};e.face=(target?.x??gate.x)>=e.x?1:-1}return}const move=advanceToGate(e,e.speed*(e.enraged?1.2:1)*dt);e.walkPhase=(e.walkPhase+move/32)%1;e.moving=move>.02}
+function updateBoss(e,dt){const cfg=bossTypes[e.mapKey];if(!e.enraged&&e.hp<=e.max*.5){e.enraged=true;text(e.x,e.y-95,'首领狂怒 · 攻势加快','#e6ae69');s.shake=.4}if(e.skill){e.skill.timer-=dt;if(e.skill.timer<=0)releaseBossSkill(e);return}if(e.strike){e.strike.delay-=dt;if(e.strike.delay<=0){const target=e.strike.target;e.strike=null;bossStrike(e,target)}}e.skillTimer-=dt;if(e.attack>0)return;if(e.skillTimer<=0){beginBossSkill(e);return}const target=nearestAlly(e,180,true);if(target?dist(e,target)<=cfg.reach:groundAtGate(e,27)){if(e.cd<=0){e.skillRelease=false;e.attackSpan=1.1;e.attack=1.1;e.cd=cfg.interval*(e.enraged?.8:1);e.strike={target,delay:.55};e.face=(target?.x??gate.x)>=e.x?1:-1}return}const move=target?pursueAlly(e,target,dt):advanceToGate(e,e.speed*(e.enraged?1.2:1)*dt);e.walkPhase=(e.walkPhase+move/32)%1;e.moving=move>.02}
 function updateHazards(dt){s.hazards.forEach(h=>{h.life-=dt;if(h.life>0)s.units.forEach(u=>{if(u.hp>0&&inBlast(u,h))u.hp-=h.damage*dt})});s.hazards=s.hazards.filter(h=>h.life>0)}
 function syncBoss(){const boss=s.enemies.find(e=>e.type==='boss'&&e.hp>0),visible=!!boss&&run&&!s.over;$('#bossStatus').classList.toggle('visible',visible);$('#stage').classList.toggle('has-boss',visible);if(!boss)return;const cfg=bossTypes[boss.mapKey];$('#bossName').textContent=cfg.name+(boss.enraged?' · 狂怒':'');$('#bossHealth').textContent=Math.ceil(Math.max(0,boss.hp))+' / '+boss.max;$('#bossHealthFill').style.transform='scaleX('+clamp(boss.hp/boss.max,0,1)+')';$('#bossStatus').classList.toggle('enraged',boss.enraged);$('#bossSkill').textContent=boss.skill?cfg.skill+'蓄势 · 移出亮起的范围':boss.enraged?'半血狂怒 · 攻击与移动加快':'最后一波首领 · 击败后方可通关'}
 function drawFlyer(e){const cfg=flyerTypes[e.mapKey],aim=enemyAim(e),size=cfg.size*actorScale,col=Math.floor(s.time*9+e.phase)%4;x.save();x.globalAlpha=.17;x.fillStyle='#284c3d';x.beginPath();x.ellipse(e.x,e.y+12*actorRatio,size*.24,7*actorRatio,0,0,Math.PI*2);x.fill();x.globalAlpha=e.flash?.62:1;x.translate(aim.x,aim.y+(e.attack>0?Math.sin(e.attack*9)*4:0));x.scale(e.face,1);if(flyerSheet.complete&&flyerSheet.naturalWidth){const cw=flyerSheet.naturalWidth/4,ch=flyerSheet.naturalHeight/3;x.drawImage(flyerSheet,col*cw,cfg.row*ch,cw,ch,-size/2,-size*.55,size,size)}x.restore();if(s.animationDemo){x.save();x.font='bold 11px KaiTi,serif';x.textAlign='center';x.fillStyle='#fff0c6';x.shadowColor='#344a39';x.shadowBlur=3;x.fillText(cfg.name,e.x,aim.y+size*.45);x.restore()}}
@@ -73,10 +73,10 @@ function advanceToGate(e,step){return s.wall.advance(e,s.wall.waypoint(e,s.wall.
 function chargeAnimal(e,dt){const cfg=beastTypes[e.animalKey];if(e.chargeWait>0){e.chargeWait=Math.max(0,e.chargeWait-dt);return}if(!groundAtGate(e,14)){const move=advanceToGate(e,e.speed*dt);e.moving=move>.02;e.dustCd-=dt;if(e.dustCd<=0){e.dustCd=.09;s.fx.push({kind:'particle',x:e.x-e.face*19,y:e.y+11,vx:-e.face*18,vy:-12,life:.28,max:.28,color:cfg.color})}}else if(!e.impacted){e.impacted=true;const dmg=Math.round(cfg.impact*s.stage.damage*1.18);s.hp-=dmg;e.attack=.38;e.cd=1.15;s.shake=.8;text(gate.x,gate.y-55,`${cfg.name}撞城 -${dmg}`,'#ef8c56');burst(gate.x,gate.y,'#ead5a0',17);s.fx.push({kind:'impact',x:gate.x,y:gate.y,life:.45,max:.45,color:cfg.color});beep(65,.12)}else if(e.cd<=0){const dmg=Math.round(cfg.bite*s.stage.damage*1.18);s.hp-=dmg;e.cd=1.15;e.attack=.3;s.shake=.25;text(gate.x,gate.y-40,`-${dmg}`,'#ef8c56')}}
 function drawBeast(e){const cfg=beastTypes[e.animalKey],size=cfg.size*actorScale,t=performance.now()/1000,pace=Math.sin(t*19+e.phase),bob=e.moving?Math.abs(pace)*2:0;x.save();x.translate(e.x,e.y);if(e.chargeWait>0){x.strokeStyle=cfg.color;x.globalAlpha=.5+Math.sin(t*12)*.3;x.lineWidth=2;x.beginPath();x.ellipse(0,9,(26+Math.sin(t*9)*4)*actorRatio,10*actorRatio,0,0,Math.PI*2);x.stroke();}x.globalAlpha=.25;x.fillStyle='#233d31';x.beginPath();x.ellipse(0,12*actorRatio,size*.34,8*actorRatio,0,0,Math.PI*2);x.fill();x.globalAlpha=e.flash?.65:1;if(e.moving){x.strokeStyle=cfg.color;x.lineWidth=2;x.globalAlpha=.45;for(let j=0;j<3;j++){x.beginPath();x.moveTo(-e.face*(size*.4+j*4),-7+j*7);x.lineTo(-e.face*(size*.7+j*6),-7+j*7);x.stroke()}x.globalAlpha=e.flash?.65:1;}x.translate(0,-bob-(e.attack>0?Math.sin(e.attack*12)*3:0));x.scale(e.face,1);x.rotate(e.moving?pace*.025:0);if(animalSheet.complete&&animalSheet.naturalWidth){const cw=animalSheet.naturalWidth/3,ch=animalSheet.naturalHeight/2;x.drawImage(animalSheet,cfg.cell%3*cw,Math.floor(cfg.cell/3)*ch,cw,ch,-size/2,-size*.57,size,size*.82);}x.restore();}
 const troop={
- footman:{name:'剑士',buildName:'剑士营',buildGold:44,buildWood:26,gold:22,wood:10,hp:62,damage:16,range:34,speed:44,rate:2,roof:'#b94b3f'},
- archer:{name:'弓手',buildName:'弓手营',buildGold:40,buildWood:30,gold:16,wood:18,hp:31,damage:12,range:170,speed:27,rate:2.15,roof:'#3f7eae'},
- spearman:{name:'枪兵',buildName:'长枪营',buildGold:55,buildWood:34,gold:28,wood:15,hp:78,damage:23,range:48,speed:35,rate:2.4,roof:'#638c4b'},
- mage:{name:'法师',buildName:'秘法塔',buildGold:68,buildWood:48,gold:36,wood:25,hp:25,damage:20,range:205,speed:24,rate:2.8,roof:'#805ca6'}
+ footman:{name:'剑士',buildName:'剑士营',buildGold:88,buildWood:52,gold:33,wood:15,hp:62,damage:16,range:34,speed:44,rate:2,roof:'#b94b3f'},
+ archer:{name:'弓手',buildName:'弓手营',buildGold:80,buildWood:60,gold:24,wood:27,hp:31,damage:12,range:170,speed:27,rate:2.15,roof:'#3f7eae'},
+ spearman:{name:'枪兵',buildName:'长枪营',buildGold:110,buildWood:68,gold:42,wood:23,hp:78,damage:23,range:48,speed:35,rate:2.4,roof:'#638c4b'},
+ mage:{name:'法师',buildName:'秘法塔',buildGold:136,buildWood:96,gold:54,wood:38,hp:25,damage:20,range:205,speed:24,rate:2.8,roof:'#805ca6'}
 };
 const zones=[
  {id:'mine',kind:'gold',x:315,y:45,w:150,h:100,name:'青岚金矿',hint:'正在开采矿石',rate:Meta.gatherIntervals.mine},{id:'mine2',kind:'gold',x:1100,y:85,w:150,h:100,name:'东山金矿',hint:'正在开采矿石',rate:Meta.gatherIntervals.mine},{id:'mine3',kind:'gold',x:1160,y:260,w:120,h:100,name:'临溪矿洞',hint:'正在开采矿石',rate:Meta.gatherIntervals.mine},
@@ -88,7 +88,7 @@ const spawns=[[515,157],[1070,180],[1120,390]],gate={x:420,y:455};
 function configureMap(m){let mine=0,wood=0,plot=0;const free=Meta.unlocks(progress,profile.levels).freeCamps;zones.splice(0,zones.length,...zoneTemplates.filter(z=>z.kind!=='troop'||!free).map(z=>({...z,built:false,tier:1})));zones.forEach(z=>{if(z.kind==='troop'){const [cx,cy]=m.plots[plot++];Object.assign(z,Facility.campFootprint(m));z.x=cx-z.w/2;z.y=cy-z.h/2}else{const {cx,cy,rx,ry}=z.kind==='gold'?m.mines[mine++]:m.trees[wood++];z.x=Math.max(0,cx-rx);z.y=Math.max(0,cy-ry);z.w=Math.min(W,cx+rx)-z.x;z.h=Math.min(H,cy+ry)-z.y;z.name=m.name+(z.kind==='gold'?' · 金矿':' · 林地')}});gate.x=m.gate[0];gate.y=m.gate[1];spawns.splice(0,spawns.length,...m.spawns.map(p=>[...p]))}
 let s,p={x:-99,y:-99,down:false},run=false,paused=false,last=performance.now(),battleSerial=0,audioOn=settingEnabled('sound'),shakeOn=settingEnabled('shake'),audio;
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-function reset(){configureMap(activeMap);const stage=campaign.levels[selectedLevel],loadout=Meta.snapshot(profile),maxHp=Meta.wallHp(loadout);s={stage,loadout,wall:castleRoutes[activeMap.id],journal:Achievements.journal(),skillPoints:0,spellAim:null,spellReadyAt:0,spellFields:[],orders:{},unlocks:Meta.unlocks(progress,loadout),battleId:Date.now().toString(36)+'-'+(++battleSerial)+'-'+Math.random().toString(36).slice(2),settled:false,won:false,...Meta.startingStock(stage,loadout),hp:maxHp,maxHp,wave:1,waveTime:0,next:1,between:Meta.preparationTime(stage,loadout),kills:0,score:0,cursorCd:0,healCd:0,rally:null,placement:null,mergeMode:false,mergeSource:null,fieldTab:'general',nextStructure:0,time:0,beastsSent:0,flyersSent:0,bossSpawned:false,bossDefeated:false,hazards:[],raidAlert:0,enemies:[],units:[],fx:[],texts:[],progress:{},buildings:{footman:false,archer:false,spearman:false,mage:false},over:false,shake:0};zones.forEach(z=>s.progress[z.id]=0);renderField();sync()}
+function reset(){configureMap(activeMap);const stage=campaign.levels[selectedLevel],loadout=Meta.snapshot(profile),maxHp=Meta.wallHp(loadout);s={stage,loadout,wall:castleRoutes[activeMap.id],journal:Achievements.journal(),skillPoints:0,spellAim:null,spellReadyAt:0,spellFields:[],orders:{},unlocks:Meta.unlocks(progress,loadout),battleId:Date.now().toString(36)+'-'+(++battleSerial)+'-'+Math.random().toString(36).slice(2),settled:false,won:false,...Meta.startingStock(stage,loadout),hp:maxHp,maxHp,wave:1,waveTime:0,raidersSent:0,between:Meta.preparationTime(stage,loadout),kills:0,score:0,cursorCd:0,healCd:0,rally:null,selectedGeneral:null,placement:null,mergeMode:false,mergeSource:null,fieldTab:'general',nextStructure:0,time:0,beastsSent:0,flyersSent:0,bossSpawned:false,bossDefeated:false,hazards:[],raidAlert:0,enemies:[],units:[],fx:[],texts:[],progress:{},buildings:{footman:false,archer:false,spearman:false,mage:false},over:false,shake:0};zones.forEach(z=>s.progress[z.id]=0);renderField();sync()}
 function settingEnabled(key){try{return localStorage.getItem('hoverhold-setting-'+key)!=='off'}catch{return true}}
 function saveSetting(key,on){try{localStorage.setItem('hoverhold-setting-'+key,on?'on':'off')}catch{}}
 function beep(f=400,d=.05,type='square'){if(!audioOn)return;try{audio||=new(window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.028,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+d)}catch{}}
@@ -117,32 +117,40 @@ $('#shakeBtn').onclick=()=>{shakeOn=!shakeOn;saveSetting('shake',shakeOn);syncSe
 $('#settleNowBtn').onclick=()=>{if(!run)return;closeSettings();lose(true)};
 $('#startBtn').onclick=start;$('#skipPreparation').onclick=skipPreparation;$('#againBtn').onclick=start;$('#restartBtn').onclick=start;
 function zone(){const hit=[...zones].reverse().find(z=>p.x>=z.x&&p.x<=z.x+z.w&&p.y>=z.y&&p.y<=z.y+z.h);return hit&&['gold','wood'].includes(hit.kind)?zones.find(z=>z.kind==='machine'&&!z.built&&z.resourceId===hit.id)||hit:hit}
+function workTarget(){
+ const a=zone(),ally=hoveredAlly();
+ if(a?.kind==='troop')return {a,ally:null};
+ if(ally||a)return {a:ally?null:a,ally};
+ // The upper part of a built camp is visible above its ground footprint.
+ const roof=[...zones].reverse().find(z=>z.kind==='troop'&&z.built&&Math.abs(p.x-z.x-z.w/2)<z.w*.45&&p.y>=z.y-z.h*.55&&p.y<z.y);
+ return {a:roof,ally:null};
+}
 function hoveredEnemy(){return [...s.enemies].reverse().find(e=>e.hp>0&&enemyPointerDistance(e)<enemyRadius(e))}
-function hoveredAlly(){let best=null,near=1e9;s.units.forEach(u=>{const d=Math.hypot(p.x-u.x,p.y-(u.y-16*actorRatio));if(u.hp>0&&d<(u.hero?29:23)*actorRatio&&d<near){near=d;best=u}});return best}
+function hoveredAlly(generalsOnly=false){let best=null,near=1e9;s.units.forEach(u=>{const d=Math.hypot(p.x-u.x,p.y-(u.y-16*actorRatio));if(u.hp>0&&(!generalsOnly||u.hero)&&d<(u.hero?29:23)*actorRatio&&d<near){near=d;best=u}});return best}
 function unitStats(u){const base=u.hero?generals[u.type]:troop[u.type],bonus=Meta.unitBonus(s.loadout,u.type,u.hero);return {...base,hp:Math.round(base.hp*bonus.hp),damage:Math.round(base.damage*bonus.damage*(orderActive(u)?Skills.orderDamage:1)),speed:base.speed*bonus.speed*(u.slow>0?.55:1)}}
 function unitName(u){return (u.hero?generals[u.type].name:troop[u.type].name)+' Lv.'+s.loadout[u.type]}
 function orderActive(u){return !u.hero&&(s.orders[u.type]||0)>s.time}
 function troopCapacity(type){return Skills.capacity(zones,type)}
 function aliveTroops(type){return s.units.filter(u=>u.hp>0&&!u.hero&&u.type===type).length}
-function getGeneralAvailability(){
- const counts=Object.fromEntries(Object.keys(troop).map(type=>[type,aliveTroops(type)]));
- const heroes=s.units.filter(u=>u.hp>0&&u.hero);
- return {counts,max:Math.max(...Object.values(counts)),heroes,limit:Skills.capacity(zones),afford:s.gold>=220&&s.wood>=160};
+const generalMinimum=20;
+function generalLimit(type){
+ return zones.reduce((limit,z)=>z.kind==='troop'&&z.built&&z.type===type?Math.max(limit,Math.min(2,z.tier)):limit,0);
 }
+function liveGenerals(type){return s.units.filter(u=>u.hp>0&&u.hero&&(!type||u.type===type))}
 function syncCommands(){
- const a=getGeneralAvailability(),active=run&&!paused&&!s.over;
+ const active=run&&!paused&&!s.over,afford=s.gold>=220&&s.wood>=160;
  for(const type of Object.keys(troop)){
-  const b=generalButtons[type],eligible=a.counts[type]>=3&&a.counts[type]===a.max;
-  const ready=active&&a.heroes.length<a.limit&&a.afford&&eligible;
+  const b=generalButtons[type],count=aliveTroops(type),matching=liveGenerals(type),limit=generalLimit(type);
+  const ready=active&&count>=generalMinimum&&matching.length<limit&&afford;
   b.disabled=!ready;b.classList.toggle('ready',ready);
-  b.querySelector('small').textContent=troop[type].name+' · '+a.counts[type]+'/'+troopCapacity(type)+(eligible?' · 优势':'');
-  b.title=a.heroes.length>=a.limit?'将领席位已满':!eligible?'同类普通士兵至少3人，且在场人数最多':!a.afford?'需要220矿石、160木材':'召唤'+generals[type].name;
-  const order=$('#order-'+type),matching=a.heroes.filter(u=>u.type===type),left=matching.length?Math.max(0,Math.ceil(Math.min(...matching.map(u=>u.orderReadyAt||0))-s.time)):0;
-  order.disabled=!active||!matching.length||left>0||a.counts[type]===0||orderActive({type});
+  b.querySelector('small').textContent=troop[type].name+' '+count+'/'+troopCapacity(type)+' · 将 '+matching.length+'/'+limit;
+  b.title=count<generalMinimum?'至少需要20名同种普通士兵在场':matching.length>=limit?'该兵种将领席位已满':!afford?'需要220矿石、160木材':'召唤'+generals[type].name;
+  const order=$('#order-'+type),left=matching.length?Math.max(0,Math.ceil(Math.min(...matching.map(u=>u.orderReadyAt||0))-s.time)):0;
+  order.disabled=!active||!matching.length||left>0||count===0||orderActive({type});
   order.textContent=!matching.length?'军令 · 未召唤':orderActive({type})?'军令 · 生效中':left?'军令 · '+left+' 秒':'发动军令';
  }
- $('#generalStatus').textContent='将领 '+a.heroes.length+'/'+a.limit+' · 220矿 / 160木 · 同类≥3且最多';
- $('#clearRallyBtn').disabled=!s.rally||!active;
+ $('#generalStatus').textContent='将领 '+liveGenerals().length+' · 同类≥20 · 220矿 / 160木';
+ $('#clearRallyBtn').disabled=!active||(!s.rally&&!s.selectedGeneral&&!s.units.some(u=>u.commandPoint));
 }
 function activateOrder(type){
  if(!run||paused||s.over||orderActive({type})||!aliveTroops(type))return false;
@@ -157,14 +165,34 @@ function activateOrder(type){
  return true;
 }
 for(const type of Object.keys(generals))$('#order-'+type).onclick=()=>activateOrder(type);
-function makeUnit(type,hero=false,at=null){const cfg=unitStats({type,hero}),entry=at||s.wall.innerDoor,jitter={x:entry.x+rnd(-8,8),y:entry.y+rnd(-6,6)},pos=!at&&s.wall.interior(jitter)?jitter:entry,u={type,hero,x:pos.x,y:pos.y,hp:cfg.hp,max:cfg.hp,cd:0,face:1,phase:rnd(0,6.28),moving:false,attack:0,hit:0};s.units.push(u);if(s.rally)assignFormation();return u}
-function summonGeneral(type){if(!generals[type]||!run||paused||s.over)return false;const a=getGeneralAvailability();if(a.heroes.length>=a.limit||!a.afford||a.counts[type]<3||a.counts[type]!==a.max)return false;s.gold-=220;s.wood-=160;const u=makeUnit(type,true);s.journal.generals[type]=(s.journal.generals[type]||0)+1;if(a.heroes.length+1===2)s.journal.doubleGeneral=1;text(u.x,u.y-75,generals[type].name+' · 应召出阵',generals[type].color);burst(u.x,u.y,'#e4bd65',26);s.fx.push({kind:'impact',x:u.x,y:u.y,life:1,max:1,color:'#e4bd65'});beep(660,.18);syncCommands();return true}
+function makeUnit(type,hero=false,at=null){const cfg=unitStats({type,hero}),entry=at||s.wall.innerDoor,jitter={x:entry.x+rnd(-8,8),y:entry.y+rnd(-6,6)},pos=!at&&s.wall.interior(jitter)?jitter:entry,u={type,hero,x:pos.x,y:pos.y,hp:cfg.hp,max:cfg.hp,cd:0,face:1,phase:rnd(0,6.28),moving:false,attack:0,hit:0};s.units.push(u);assignLeaders(type);if(s.rally)assignFormation();return u}
+function summonGeneral(type){if(!generals[type]||!run||paused||s.over)return false;if(aliveTroops(type)<generalMinimum||liveGenerals(type).length>=generalLimit(type)||s.gold<220||s.wood<160)return false;s.gold-=220;s.wood-=160;const u=makeUnit(type,true);s.journal.generals[type]=(s.journal.generals[type]||0)+1;if(liveGenerals().length>=2)s.journal.doubleGeneral=1;text(u.x,u.y-75,generals[type].name+' · 应召出阵',generals[type].color);burst(u.x,u.y,'#e4bd65',26);s.fx.push({kind:'impact',x:u.x,y:u.y,life:1,max:1,color:'#e4bd65'});beep(660,.18);syncCommands();return true}
+function assignLeaders(type){
+ const leaders=liveGenerals(type);
+ let index=0;
+ for(const u of s.units)if(!u.hero&&u.hp>0&&u.type===type)u.leader=leaders.length?leaders[index++%leaders.length]:null;
+}
+function commandGeneral(px,py){
+ const hero=hoveredAlly(true);
+ if(hero){
+  s.selectedGeneral=s.selectedGeneral===hero?null:hero;
+  if(s.selectedGeneral)ui.tip.textContent=generals[hero.type].name+' · 点击空地指定目的地';
+  syncCommands();return true;
+ }
+ const selected=s.selectedGeneral;
+ if(!selected)return false;
+ if(!rallyGround(px,py)||hoveredEnemy())return true;
+ selected.commandPoint={x:px,y:py};selected.rally=null;
+ s.fx.push({kind:'impact',x:px,y:py,life:.8,max:.8,color:generals[selected.type].color});
+ text(px,py-32,generals[selected.type].name+' · 进军',generals[selected.type].color);beep(500,.07);
+ return true;
+}
 function openGround(px,py){if(!s.wall.walkable({x:px,y:py})||zones.some(z=>pointInZone({x:px,y:py},z)))return false;[px,py]=activeMap.unframe([px,py]);if(px<35||px>1245||py<110||py>575)return false;switch(activeMap.id){case'mountain':return !(px<405&&py>290);case'island':return !(px>860&&py>230);case'forest':return !(px<475&&py<390);case'volcano':return !(px>835&&py<380);case'desert':return !(px>440&&px<930&&py>385);default:return true}}
 function pointInZone(pt,z){return pt.x>=z.x&&pt.x<=z.x+z.w&&pt.y>=z.y&&pt.y<=z.y+z.h}
 function rallyGround(px,py){const pt={x:px,y:py};if(!s.wall.walkable(pt))return false;return s.wall.interior(pt)?!zones.some(z=>pointInZone(pt,z)):openGround(px,py)}
 function assignFormation(){if(!s.rally)return;const live=s.units.filter(u=>u.hp>0),cols=Math.ceil(Math.sqrt(live.length));live.forEach((u,i)=>{const px=s.rally.x+(i%cols-(cols-1)/2)*28,py=s.rally.y+(Math.floor(i/cols)-(Math.ceil(live.length/cols)-1)/2)*25;u.rallyArrived=false;u.rally=rallyGround(px,py)&&s.wall.interior({x:px,y:py})===s.wall.interior(s.rally)?{x:px,y:py}:{...s.rally}})}
-function issueRally(px,py){if(!run||paused||s.over||!rallyGround(px,py)||hoveredAlly()||hoveredEnemy())return false;s.rally={x:px,y:py};assignFormation();text(px,py-44,s.units.some(u=>u.hp>0)?'全军集合':'集结点已设定','#e5f3c4');s.fx.push({kind:'impact',x:px,y:py,life:.8,max:.8,color:'#a1c986'});beep(500,.07);syncCommands();return true}
-function clearRally(){if(!run||paused||s.over)return;s.rally=null;s.units.forEach(u=>u.rally=null);ui.tip.textContent='已取消集合 · 全军自由迎敌';syncCommands()}
+function issueRally(px,py){if(!run||paused||s.over||!rallyGround(px,py)||hoveredAlly()||hoveredEnemy())return false;s.rally={x:px,y:py};s.units.forEach(u=>u.commandPoint=null);assignFormation();text(px,py-44,s.units.some(u=>u.hp>0)?'全军集合':'集结点已设定','#e5f3c4');s.fx.push({kind:'impact',x:px,y:py,life:.8,max:.8,color:'#a1c986'});beep(500,.07);syncCommands();return true}
+function clearRally(){if(!run||paused||s.over)return;s.rally=null;s.selectedGeneral=null;s.units.forEach(u=>{u.rally=null;u.commandPoint=null});ui.tip.textContent='已取消集合 · 全军自由迎敌';syncCommands()}
 function healAlly(u,dt){if(u.hp<=0||u.hp>=u.max)return;const amount=Math.min(u.max-u.hp,(12+u.max*.025)*workRate('heal')*dt);u.hp+=amount;u.healAmount=(u.healAmount||0)+amount;if(s.healCd<=0){text(u.x,u.y-(u.hero?82:62),'+'+Math.max(1,Math.round(u.healAmount)),'#c1f2a2');u.healAmount=0;s.fx.push({kind:'heal',x:u.x,y:u.y-18,life:.6,max:.6,color:'#b3efa0'});s.healCd=.5}}
 function workRate(kind){return Meta.rate(s.loadout,kind||'build')}
 function blueprintFor(type){const t=troop[type];return t?{name:t.buildName,kind:'troop',gold:t.buildGold,wood:t.buildWood,time:3,size:124,color:t.roof}:Facility.blueprints[type]}
@@ -179,8 +207,8 @@ function renderField(){if(!s)return;const tab=s.fieldTab;document.querySelectorA
 }
 $('.field-tabs').onclick=e=>{const b=e.target.closest('[data-field-tab]');if(b){s.fieldTab=b.dataset.fieldTab;renderField()}};
 $('#fieldOptions').onclick=e=>{const spell=e.target.closest('[data-spell]');if(spell&&!spell.disabled){selectSpell(spell.dataset.spell);return}const b=e.target.closest('[data-build]');if(b&&!b.disabled)beginBuild(b.dataset.build)};
-function syncField(){if(!s)return;syncSpellOptions();document.querySelectorAll('[data-build]').forEach(b=>{const reason=typeAvailability(b.dataset.build);b.disabled=!!reason||!run||paused||s.over;b.title=reason||'点击空地安放，悬停继续建造';b.classList.toggle('selected',s.placement?.type===b.dataset.build)});if(s.fieldTab==='camp')$('#mergeCampsBtn')?.classList.toggle('selected',s.mergeMode);if(s.fieldTab!=='general')$('#generalStatus').textContent=s.fieldTab==='camp'?'兵营只能建在城内 · 同类同阶可合营':s.fieldTab==='tower'?'弓箭塔 Lv.3 / 炮塔 Lv.6 · 可建在城外':s.fieldTab==='spells'?'击杀积攒技能点 · 选术法后点击战场':'机器放在对应资源点 · 建成后自动工作';$('#commandHelp').textContent=s.spellAim?'已选 '+Skills.spells[s.spellAim].name+' · 左键释放 / Esc 取消':s.placement?'点击有效位置安放 · 悬停完成营建 · 右键取消':s.mergeMode?'先点一座兵营，再点同类同阶兵营合并':'悬停己方治疗 · 点击空地集合 · 局外金币升级'}
-function cancelTool(){if(!s)return;s.spellAim=null;s.placement=null;s.mergeMode=false;s.mergeSource=null;syncField()}
+function syncField(){if(!s)return;syncSpellOptions();document.querySelectorAll('[data-build]').forEach(b=>{const reason=typeAvailability(b.dataset.build);b.disabled=!!reason||!run||paused||s.over;b.title=reason||'点击空地安放，悬停继续建造';b.classList.toggle('selected',s.placement?.type===b.dataset.build)});if(s.fieldTab==='camp')$('#mergeCampsBtn')?.classList.toggle('selected',s.mergeMode);if(s.fieldTab!=='general')$('#generalStatus').textContent=s.fieldTab==='camp'?'兵营只能建在城内 · 同类同阶可合营':s.fieldTab==='tower'?'弓箭塔 Lv.3 / 炮塔 Lv.6 · 可建在城外':s.fieldTab==='spells'?'击杀积攒技能点 · 选术法后点击战场':'机器放在对应资源点 · 建成后自动工作';$('#commandHelp').textContent=s.spellAim?'已选 '+Skills.spells[s.spellAim].name+' · 左键释放 / Esc 取消':s.placement?'点击有效位置安放 · 悬停完成营建 · 右键取消':s.mergeMode?'先点一座兵营，再点同类同阶兵营合并':'悬停己方治疗 · 点将领再点空地下令'}
+function cancelTool(){if(!s)return;s.selectedGeneral=null;s.spellAim=null;s.placement=null;s.mergeMode=false;s.mergeSource=null;syncField()}
 function spellUnavailable(id){
  const spell=Skills.spells[id];
  if(!spell||!run||paused||s.over)return '进入战斗后可用';
@@ -252,6 +280,14 @@ function drawSpellAim(){if(!s.spellAim||p.x<0)return;const cfg=Skills.stats(s.sp
 function beginBuild(type){if(!run||paused||s.over)return false;const reason=typeAvailability(type);if(reason){ui.tip.textContent=reason;return false}s.spellAim=null;s.placement={type};s.mergeMode=false;s.mergeSource=null;syncField();return true}
 function placementPlan(type,px,py){
  const b=blueprintFor(type);if(!b)return {ok:false,reason:'未知建筑',cx:px,cy:py};let cx=px,cy=py,resourceId=null;
+ if(b.kind==='troop'){
+  const nearby=activeMap.plots.filter(([x,y])=>Math.hypot(x-px,y-py)<=20).sort((a,b)=>Math.hypot(a[0]-px,a[1]-py)-Math.hypot(b[0]-px,b[1]-py));
+  for(const [x,y] of nearby){const snap=placementAt(b,x,y);if(snap.ok)return snap}
+ }
+ return placementAt(b,px,py);
+}
+function placementAt(b,px,py){
+ let cx=px,cy=py,resourceId=null;
  if(b.kind==='machine'){const resource=zones.find(z=>z.kind===b.resource&&px>=z.x&&px<=z.x+z.w&&py>=z.y&&py<=z.y+z.h);if(!resource)return {ok:false,reason:'请选择'+(b.resource==='gold'?'矿区':'树林'),cx,cy};resourceId=resource.id;cx=Math.max(60,Math.min(1220,resource.x+resource.w/2));cy=Math.max(150,Math.min(565,resource.y+resource.h*.72));if(zones.some(z=>z.kind==='machine'&&z.resourceId===resourceId))return {ok:false,reason:'该资源点已有机关',cx,cy}}
  else if(b.kind==='troop'){
   if(!Facility.campFits(activeMap,cx,cy))return {ok:false,reason:'兵营地基必须完整位于城墙内',cx,cy};
@@ -266,13 +302,13 @@ function placementPlan(type,px,py){
 function tryPlace(type,px,py){if(!run||paused||s.over||typeAvailability(type))return false;const plan=placementPlan(type,px,py),b=blueprintFor(type);if(!plan.ok){text(px,py-25,plan.reason,'#df9b6c');return false}s.gold-=b.gold;s.wood-=b.wood;const {w,h}=b.kind==='troop'?Facility.campFootprint(activeMap):{w:96,h:64};const z={id:'structure-'+(++s.nextStructure),kind:b.kind,type,x:plan.cx-w/2,y:plan.cy-h/2,w,h,name:b.name,tier:1,built:false,paid:true,resourceId:plan.resourceId,cd:0,production:0};zones.push(z);s.progress[z.id]=0;cancelTool();text(plan.cx,plan.cy-40,'材料已投入 · 悬停营建','#f4df9a');beep(360,.06);renderField();return z}
 function mergePick(px,py){const z=[...zones].reverse().find(z=>z.kind==='troop'&&z.built&&px>=z.x&&px<=z.x+z.w&&py>=z.y&&py<=z.y+z.h);if(!z){ui.tip.textContent='请选择已建成的兵营';return false}if(!s.mergeSource){s.mergeSource=z.id;text(px,py-35,'已选 '+troop[z.type].buildName+' '+z.tier+'阶','#f4df9a');return false}const source=zones.find(a=>a.id===s.mergeSource);if(source===z){s.mergeSource=null;return false}return mergeCamps(source,z)}
 function mergeCamps(a,b){if(!run||paused||s.over)return false;const reason=Facility.mergeReason(a,b,s.unlocks.freeCamps);if(reason){ui.tip.textContent=reason;return false}zones.splice(zones.indexOf(a),1);delete s.progress[a.id];b.tier++;s.journal.merges++;s.progress[b.id]=0;s.mergeSource=null;s.mergeMode=false;text(b.x+b.w/2,b.y-30,troop[b.type].buildName+'升至 '+b.tier+'阶','#e8c471');burst(b.x+b.w/2,b.y+b.h/2,'#e8c471',25);beep(760,.15);renderField();return true}
-function clickBattle(px,py){if(!run||paused||s.over)return false;if(s.spellAim)return castSpell(s.spellAim,px,py);if(s.placement)return tryPlace(s.placement.type,px,py);if(s.mergeMode)return mergePick(px,py);return issueRally(px,py)}
+function clickBattle(px,py){if(!run||paused||s.over)return false;if(s.spellAim)return castSpell(s.spellAim,px,py);if(s.placement)return tryPlace(s.placement.type,px,py);if(s.mergeMode)return mergePick(px,py);if(commandGeneral(px,py))return true;return issueRally(px,py)}
 function updateFacilities(dt){for(const z of zones){if(!z.built)continue;z.fire=Math.max(0,(z.fire||0)-dt);z.hit=Math.max(0,(z.hit||0)-dt);const cx=z.x+z.w/2,cy=z.y+z.h/2;if(z.kind==='machine'){z.production=(z.production||0)+Meta.machineRate(s.loadout,z.type)*dt;const amount=Math.floor(z.production);if(amount>0){z.production-=amount;const kind=z.type==='oreMachine'?'gold':'wood';s[kind]+=amount;s.journal.gathered[kind]+=amount;z.fxCd=(z.fxCd||0)-dt;if(z.fxCd<=0){burst(cx,cy-10,z.type==='oreMachine'?'#dec46b':'#94b76f',2);z.fxCd=.7}}}else if(z.kind==='tower'){z.cd=(z.cd||0)-dt;if(z.cd>0)continue;const cfg=Facility.towerStats(z.type,s.loadout.wall);let target=null,near=cfg.range;s.enemies.forEach(e=>{const d=Math.hypot(e.x-cx,e.y-cy);if(e.hp>0&&encounterRules.canTarget(z.type,e)&&d<near){near=d;target=e}});if(!target)continue;z.cd=cfg.interval;z.fire=.24;target.hp-=cfg.damage;target.flash=1;target.hit=.2;if(cfg.splash)s.enemies.forEach(e=>{if(e!==target&&e.hp>0&&encounterRules.canTarget(z.type,e)&&dist(e,target)<cfg.splash){e.hp-=cfg.damage*.6;e.flash=1}});const life=.28,impact=enemyEffectPoint(target);s.fx.push({kind:z.type==='cannon'?'shell':'arrow',x:cx,y:cy-42,vx:(impact.x-cx)/life,vy:(impact.y-(cy-42))/life,life,max:life,color:z.type==='cannon'?'#e4a261':'#e1d2a4'});if(z.type==='cannon'){s.fx.push({kind:'impact',x:target.x,y:target.y,life:.5,max:.5,color:'#e9b568'});burst(target.x,target.y,'#e9b568',10)}}}}
 function action(dt){
  s.healCd=Math.max(0,s.healCd-dt);if(s.spellAim){ui.tip.textContent='瞄准 '+Skills.spells[s.spellAim].name+' · 点击释放 / Esc 取消';return}if(s.placement||s.mergeMode){ui.tip.textContent=s.mergeMode?(s.mergeSource?'再点击同类同阶兵营合并 · 右键取消':'先点击一座已建成兵营 · 右键取消'):(blueprintFor(s.placement.type).kind==='troop'?'在城墙内安放':'选择位置安放')+blueprintFor(s.placement.type).name+' · 右键取消';return}
- const ally=hoveredAlly(),a=ally?null:zone();zones.forEach(z=>{if(z!==a&&(z.kind==='gold'||z.kind==='wood'||z.built))s.progress[z.id]=Math.max(0,(s.progress[z.id]||0)-dt*.6)});
+ const {ally,a}=workTarget();zones.forEach(z=>{if(z!==a&&(z.kind==='gold'||z.kind==='wood'||z.built))s.progress[z.id]=Math.max(0,(s.progress[z.id]||0)-dt*.6)});
  if(ally){ui.tip.textContent=unitName(ally)+(ally.hp<ally.max?' · 正在治疗 '+Math.ceil(ally.hp)+'/'+ally.max:' · 生命已满');healAlly(ally,dt);return}
- if(!a){ui.tip.textContent=hoveredEnemy()?'瞄准敌军 · 光标协助攻击':s.rally?'集结点已设定 · 悬停己方治疗 / 点击空地重新集合':'悬停采集、招兵、治疗 · 点击空地集合';return}
+ if(!a){ui.tip.textContent=s.selectedGeneral?'已选 '+generals[s.selectedGeneral.type].name+' · 点击空地下令 / Esc 取消':hoveredEnemy()?'瞄准敌军 · 光标协助攻击':s.rally?'集结点已设定 · 悬停己方治疗 / 点击空地重新集合':'悬停采集、招兵、治疗 · 点击空地集合';return}
  if(a.kind==='gold'||a.kind==='wood'){const skill=a.kind==='gold'?'mine':'wood';s.progress[a.id]+=dt*workRate(skill);ui.tip.textContent=a.name+' · '+a.hint+'（约 '+Meta.gatherPerSecond(s.loadout,skill).toFixed(1)+'/秒）';const cycles=Math.floor((s.progress[a.id]+1e-9)/a.rate);if(cycles>0){s.progress[a.id]=Math.max(0,s.progress[a.id]-cycles*a.rate);const gathered=cycles*Meta.gatherYield;s[a.kind]+=gathered;s.journal.gathered[a.kind]+=gathered;burst(p.x,p.y,a.kind==='gold'?'#f6c445':'#77a64b',4)}return}
  const cfg=blueprintFor(a.type);
  if(!a.built){s.progress[a.id]+=dt*workRate('build');ui.tip.textContent='建造'+cfg.name+' · '+(a.paid?'材料已投入':cfg.gold+'矿 '+cfg.wood+'木');if(s.progress[a.id]>=cfg.time){s.progress[a.id]=0;construct(a.type,a)}}
@@ -283,9 +319,13 @@ function construct(type,z=zones.find(z=>z.kind==='troop'&&z.type===type&&!z.buil
 function recruit(type,source){const cfg=troop[type];if(!cfg||aliveTroops(type)>=troopCapacity(type))return false;if(s.gold<cfg.gold||s.wood<cfg.wood){text(p.x,p.y-28,'招募资源不足','#e25c52');return false}s.gold-=cfg.gold;s.wood-=cfg.wood;const pos=source?s.wall.egress(source.x+source.w/2,source.y+source.h/2,pt=>zones.some(z=>pointInZone(pt,z))):null;const u=makeUnit(type,false,pos);s.journal.recruited[type]=(s.journal.recruited[type]||0)+1;text(u.x,u.y-35,cfg.name+'出征','#f6d66d');beep(type==='mage'?720:type==='archer'?560:360,.06);return true}
 function spawn(){const pt=spawns[Math.floor(Math.random()*spawns.length)],brute=Math.random()<s.stage.bruteChance+wavePressure()*.025,hp=(brute?115*1.25:46*1.3)*(1+wavePressure()*.12)*s.stage.health;s.enemies.push({type:brute?'brute':'raider',x:pt[0]+rnd(-13,13),y:pt[1]+rnd(-9,9),hp,max:hp,speed:((brute?23:36)+wavePressure())*s.stage.speed,cd:0,flash:0,focus:0,phase:rnd(0,6.28),moving:true,attack:0,hit:0,face:-1})}
 function wavePressure(){return 1+4*(s.wave-1)/(s.stage.waves-1)}
-function beginWave(){s.between=0;s.waveTime=0;s.next=.1;beep(180,.16)}
+function waveEnemyCount(stage,wave){
+ const first=3+Math.floor(stage.extraEnemies/4),last=14+stage.extraEnemies;
+ return first+Math.round((last-first)*Math.pow((wave-1)/(stage.waves-1),1.25));
+}
+function beginWave(){s.between=0;s.waveTime=0;s.raidersSent=0;beep(180,.16)}
 function skipPreparation(){if(!run||paused||s.over||s.between<=0)return false;beginWave();syncTimer();return true}
-function step(dt){s.time+=dt;s.raidAlert=Math.max(0,s.raidAlert-dt);s.shake=Math.max(0,s.shake-dt*7);s.cursorCd=Math.max(0,s.cursorCd-dt);if(s.between>0){s.between-=dt;if(s.between<=0)beginWave()}else{let duration=s.stage.duration,count=4+Math.round(wavePressure()*2)+s.stage.extraEnemies;s.waveTime+=dt;if(s.waveTime<duration&&s.waveTime>=s.next){spawn();s.next+=duration/count*rnd(.75,1.05)}if(s.beastsSent<s.stage.tier&&s.waveTime>=6+s.beastsSent*5)spawnAnimal();if(s.flyersSent<encounterRules.flyerCount(s.stage)&&s.waveTime>=8+s.flyersSent*5)spawnFlyer();if(encounterRules.bossDue(s.stage,s.wave,s.waveTime,s.bossSpawned))spawnBoss();if(s.waveTime>=duration&&!s.enemies.length&&(!encounterRules.hasBoss(s.stage)||s.wave<s.stage.waves||s.bossDefeated)){if(s.wave>=s.stage.waves){win();return}s.wave++;s.beastsSent=0;s.flyersSent=0;s.between=s.stage.rest;s.gold+=20;s.wood+=16;text(640,285,'波次守住！ +20矿 +16木','#f6d66d');beep(760,.18)}}action(dt);updateSpellFields(dt);units(dt);updateFacilities(dt);updateHazards(dt);enemies(dt);effects(dt);sync()}
+function step(dt){s.time+=dt;s.raidAlert=Math.max(0,s.raidAlert-dt);s.shake=Math.max(0,s.shake-dt*7);s.cursorCd=Math.max(0,s.cursorCd-dt);if(s.between>0){s.between-=dt;if(s.between<=0)beginWave()}else{const duration=s.stage.duration,count=waveEnemyCount(s.stage,s.wave);s.waveTime+=dt;while(s.raidersSent<count&&s.waveTime>=.25+s.raidersSent*duration/count){spawn();s.raidersSent++}const ramp=(s.wave-1)/(s.stage.waves-1),beasts=s.wave===1?0:1+Math.floor(ramp*(s.stage.tier-1)),flyers=s.wave<3?0:Math.ceil(ramp*encounterRules.flyerCount(s.stage));if(s.beastsSent<beasts&&s.waveTime>=6+s.beastsSent*5)spawnAnimal();if(s.flyersSent<flyers&&s.waveTime>=8+s.flyersSent*5)spawnFlyer();if(encounterRules.bossDue(s.stage,s.wave,s.waveTime,s.bossSpawned))spawnBoss();if(s.waveTime>=duration&&!s.enemies.length&&(!encounterRules.hasBoss(s.stage)||s.wave<s.stage.waves||s.bossDefeated)){if(s.wave>=s.stage.waves){win();return}s.wave++;s.beastsSent=0;s.flyersSent=0;s.between=s.stage.rest;s.gold+=20;s.wood+=16;text(640,285,'波次守住！ +20矿 +16木','#f6d66d');beep(760,.18)}}action(dt);updateSpellFields(dt);units(dt);updateFacilities(dt);updateHazards(dt);enemies(dt);effects(dt);sync()}
 function beginEnemyAttack(e,target=null){e.vx=0;e.vy=0;e.attackSpan=motion.duration(e);e.attack=e.attackSpan;e.strike={target,delay:e.attackSpan*.5};e.cd=target?1.1:1.25;e.face=(target?.x??gate.x)>=e.x?1:-1}
 function resolveEnemyStrike(e,target){if(e.hp<=0)return;const dmg=(e.type==='brute'?(target?14:13):(target?7:6))*s.stage.damage*1.18;if(target){if(target.hp<=0||!s.units.includes(target)||dist(e,target)>54||!s.wall.clear(e,target))return;target.hp-=dmg;target.hit=.22;s.shake=.2;beep(90,.03)}else if(groundAtGate(e,26)){const hit=Math.round(dmg);s.hp-=hit;s.shake=.7;text(gate.x,gate.y-45,'-'+hit,'#e85b52');beep(70,.08)}}
 function towerCenter(tower){return {x:tower.x+tower.w/2,y:tower.y+tower.h/2}}
@@ -296,16 +336,14 @@ function chooseTower(e){
  for(const tower of zones){
   if(!liveTower(tower))continue;
   const center=towerCenter(tower),d=dist(e,center);
-  if(d>=near||(e.type!=='flyer'&&!s.wall.route(e,center).length))continue;
+  if(d>=near||!s.wall.route(e,center).length)continue;
   closest=tower;near=d;
  }
  return closest;
 }
 function towerAttackStats(e,tower){
- if(e.type==='beast'){const cfg=beastTypes[e.animalKey];return {damage:e.lastTowerHit===tower?cfg.bite:cfg.impact,range:38,interval:1.15,duration:.42}}
- if(e.type==='flyer'){const cfg=flyerTypes[e.mapKey];return {damage:cfg.damage,range:52,interval:cfg.interval,duration:.6}}
- if(e.type==='boss'){const cfg=bossTypes[e.mapKey];return {damage:cfg.damage*(e.enraged?1.15:1),range:56,interval:cfg.interval*(e.enraged?.8:1),duration:1.1}}
- return {damage:e.type==='brute'?14:7,range:38,interval:1.15,duration:motion.duration(e)};
+ const cfg=beastTypes[e.animalKey];
+ return {damage:e.lastTowerHit===tower?cfg.bite:cfg.impact,range:38,interval:1.15,duration:.42};
 }
 function damageTower(tower,damage){
  tower.hp=Math.max(0,tower.hp-damage);tower.hit=.26;
@@ -316,24 +354,21 @@ function damageTower(tower,damage){
  zones.splice(zones.indexOf(tower),1);delete s.progress[tower.id];renderField();
 }
 function engageTower(e,dt){
- if(e.skill)return false;
- const flying=e.type==='flyer';
  if(e.towerStrike){
   const strike=e.towerStrike;strike.left-=dt;
   if(strike.left>0)return true;
   e.towerStrike=null;
   if(liveTower(strike.tower)){
    const center=towerCenter(strike.tower);
-   if(dist(e,center)<=strike.range+7&&(flying||s.wall.clear(e,center))){damageTower(strike.tower,strike.damage);e.lastTowerHit=strike.tower}
+   if(dist(e,center)<=strike.range+7&&s.wall.clear(e,center)){damageTower(strike.tower,strike.damage);e.lastTowerHit=strike.tower}
   }
  }
  const tower=chooseTower(e);e.towerTarget=tower;
  if(!tower)return false;
  e.strike=null;e.airStrike=null;
- if(e.type==='beast'&&e.chargeWait>0){e.chargeWait=Math.max(0,e.chargeWait-dt);return true}
- if(e.type==='boss'&&!e.enraged&&e.hp<=e.max*.5){e.enraged=true;text(e.x,e.y-95,'首领狂怒 · 攻势加快','#e6ae69')}
+ if(e.chargeWait>0){e.chargeWait=Math.max(0,e.chargeWait-dt);return true}
  if(e.attack>0)return true;
- const center=towerCenter(tower),d=dist(e,center),attack=towerAttackStats(e,tower),clear=flying||s.wall.clear(e,center);
+ const center=towerCenter(tower),d=dist(e,center),attack=towerAttackStats(e,tower),clear=s.wall.clear(e,center);
  if(d<=attack.range&&clear){
   if(e.cd<=0){
    e.face=center.x>=e.x?1:-1;e.attackSpan=attack.duration;e.attack=attack.duration;e.cd=attack.interval;e.skillRelease=false;
@@ -341,12 +376,20 @@ function engageTower(e,dt){
   }
   return true;
  }
- const distance=e.speed*dt*(e.poisonUntil>s.time?.65:1)*(e.enraged?1.2:1),step=clear?Math.min(distance,Math.max(0,d-attack.range+1)):distance;
- let moved;
- if(flying){e.x+=(center.x-e.x)*step/d;e.y+=(center.y-e.y)*step/d;e.face=center.x>=e.x?1:-1;moved=step}
- else moved=s.wall.advance(e,s.wall.waypoint(e,center),step);
- if(e.type==='boss')e.walkPhase=(e.walkPhase+moved/32)%1;else if(!flying&&e.type!=='beast')motion.walk(e,moved);
+ const distance=e.speed*dt*(e.poisonUntil>s.time?.65:1),step=clear?Math.min(distance,Math.max(0,d-attack.range+1)):distance;
+ const moved=s.wall.advance(e,s.wall.waypoint(e,center),step);
  e.moving=moved>.02;return true;
+}
+function nearestAlly(e,radius,ground){
+ let target=null,near=radius;
+ for(const u of s.units){
+  const distance=dist(e,u);
+  if(u.hp>0&&distance<near&&(!ground||s.wall.clear(e,u))){target=u;near=distance}
+ }
+ return target;
+}
+function pursueAlly(e,u,dt){
+ return s.wall.advance(e,s.wall.waypoint(e,u),e.speed*dt*(e.poisonUntil>s.time?.65:1)*(e.enraged?1.2:1));
 }
 function enemies(dt){
  for(let i=s.enemies.length-1;i>=0;i--){
@@ -355,14 +398,14 @@ function enemies(dt){
   const focus=!s.spellAim&&!hoveredAlly()&&enemyPointerDistance(e)<enemyRadius(e);e.focus=clamp(e.focus+(focus?dt*2:-dt*3),0,1);
   if(focus&&s.cursorCd<=0){e.hp-=Meta.attackDamage(s.loadout);e.flash=1;e.hit=.2;s.cursorCd=Meta.attackInterval(s.loadout);s.fx.push({kind:'cursor',x:p.x,y:p.y,vx:(e.x-p.x)*5,vy:(enemyAim(e).y-p.y)*5,life:.2,max:.2,color:'#ffe36c'});burst(e.x,e.y-8,'#ffe36c',3);beep(980,.025,'sine')}
   if(e.hp<=0){defeatEnemy(e,i);continue}
-  if(engageTower(e,dt))continue;
+  if(e.type==='beast'&&engageTower(e,dt))continue;
   if(e.type==='flyer'){updateFlyer(e,dt);continue}
   if(e.type==='boss'){updateBoss(e,dt);continue}
   if(e.type==='beast'){chargeAnimal(e,dt);continue}
   if(e.strike){e.strike.delay-=dt;if(e.strike.delay<=0){const target=e.strike.target;e.strike=null;resolveEnemyStrike(e,target)}}
   if(e.attack>0)continue;
-  let u=null,d=1e9;s.units.forEach(q=>{let n=dist(e,q);if(q.hp>0&&n<38&&n<d&&s.wall.clear(e,q)){d=n;u=q}});
-  if(u&&d<38){if(e.cd<=0)beginEnemyAttack(e,u)}
+  const u=nearestAlly(e,145,true);
+  if(u){if(dist(e,u)<38){if(e.cd<=0)beginEnemyAttack(e,u)}else{const moved=pursueAlly(e,u,dt);motion.walk(e,moved);e.moving=moved>.02}}
   else if(!groundAtGate(e,18)){const moved=advanceToGate(e,e.speed*dt);motion.walk(e,moved);e.moving=moved>.02}else if(e.cd<=0)beginEnemyAttack(e)
  }if(s.hp<=0&&!s.over)lose()
 }
@@ -394,17 +437,21 @@ function beginUnitAttack(u,target){
 function units(dt){
  for(let i=s.units.length-1;i>=0;i--){
   const u=s.units[i],cfg=unitStats(u);
-  if(u.hp<=0){u.strike=null;burst(u.x,u.y,'#d9d2bd',8);s.units.splice(i,1);continue}
+  if(u.hp<=0){u.strike=null;burst(u.x,u.y,'#d9d2bd',8);s.units.splice(i,1);if(s.selectedGeneral===u)s.selectedGeneral=null;if(u.hero)assignLeaders(u.type);continue}
   u.slow=Math.max(0,(u.slow||0)-dt);u.displayHp=Math.max(u.hp,(u.displayHp??u.max)+(u.hp-(u.displayHp??u.max))*(1-Math.exp(-dt*8)));u.cd-=dt;u.attack=Math.max(0,u.attack-dt);u.hit=Math.max(0,u.hit-dt);u.moving=false;
   if(u.strike){u.strike.delay-=dt;if(u.strike.delay<=0){const target=u.strike.target;u.strike=null;resolveAlliedStrike(u,target)}}
   if(u.attack>0)continue;
+  const leader=u.leader?.hp>0?u.leader:null,command=u.commandPoint;
+  if(command&&dist(u,command)>8){moveUnit(u,command,dt,cfg);continue}
+  if(leader&&dist(u,leader)>65){moveUnit(u,leader,dt,cfg);continue}
+  const guard=leader||command||u.rally;
   let target=null,d=1e9;
-  s.enemies.forEach(e=>{const n=dist(u,e);if(e.hp>0&&encounterRules.canTarget(u.type,e)&&n<d&&(!u.rally||dist(e,s.rally||u.rally)<cfg.range+90)){d=n;target=e}});
+  s.enemies.forEach(e=>{const n=dist(u,e);if(e.hp>0&&encounterRules.canTarget(u.type,e)&&n<d&&(!guard||dist(e,guard)<cfg.range+(leader?40:75))){d=n;target=e}});
   if(u.rally&&!u.rallyArrived&&dist(u,u.rally)<=8)u.rallyArrived=true;
-  const reaching=u.rally&&!u.rallyArrived;
+  const reaching=!leader&&!command&&u.rally&&!u.rallyArrived;
   if(reaching&&(!target||d>cfg.range||!attackLine(u,target))){moveUnit(u,u.rally,dt,cfg);continue}
-  if(!target){if(u.rally)moveUnit(u,u.rally,dt,cfg);else spreadIdle(u,dt,cfg);continue}
-  if(d>cfg.range||!attackLine(u,target)){moveUnit(u,target,dt,cfg);continue}
+  if(!target){if(leader&&dist(u,leader)>30)moveUnit(u,leader,dt,cfg);else if(!leader&&!command&&u.rally)moveUnit(u,u.rally,dt,cfg);else spreadIdle(u,dt,cfg);continue}
+  if(d>cfg.range||!attackLine(u,target)){if(leader){if(dist(target,leader)<55)moveUnit(u,target,dt,cfg);else if(dist(u,leader)>28)moveUnit(u,leader,dt,cfg)}else if(!command)moveUnit(u,target,dt,cfg);continue}
   if(u.cd<=0)beginUnitAttack(u,target);
  }
 }
@@ -511,13 +558,13 @@ function draw(){
 }
 function spriteCell(idx,dx,dy,dw,dh,flip=false,sheet=unitSheet){if(!(sheet.complete&&sheet.naturalWidth))return false;let cols=sheet===heroSheet?2:3,sw=sheet.naturalWidth/cols,sh=sheet.naturalHeight/2,sx=(idx%cols)*sw,sy=Math.floor(idx/cols)*sh;x.save();x.translate(dx+(flip?dw:0),dy);x.scale(flip?-1:1,1);x.drawImage(sheet,sx,sy,sw,sh,0,0,dw,dh);x.restore();return true}
 function animatedBody(q,idx,size,isEnemy=false){x.save();x.globalAlpha=.23;x.fillStyle='#203c30';x.beginPath();x.ellipse(q.x,q.y+12*actorRatio,size*.22,size*.065,0,0,Math.PI*2);x.fill();x.restore();if(!motion.draw(x,q,size)){spriteCell(idx,q.x-size/2,q.y-size*.65,size,size,(q.face||1)<0,q.hero?heroSheet:unitSheet)}}
-function drawRally(){if(!s.rally)return;const {x:px,y:py}=s.rally,t=performance.now()/1000;x.save();x.strokeStyle='#b7d295';x.globalAlpha=.7;x.lineWidth=2;x.beginPath();x.ellipse(px,py+10,24+Math.sin(t*3)*3,9,0,0,Math.PI*2);x.stroke();x.restore();drawFlag(px,py-26,'#598366',Math.floor(t*7)%4)}
-function drawUnit(u){const idx={footman:0,archer:1,spearman:2,mage:3}[u.type];if(u.hero){x.save();x.strokeStyle=generals[u.type].color;x.lineWidth=2;x.globalAlpha=.55+.15*Math.sin(performance.now()/300);x.beginPath();x.ellipse(u.x,u.y+11*actorRatio,20*actorRatio,7*actorRatio,0,0,Math.PI*2);x.stroke();x.restore()}if(orderActive(u)){x.save();x.strokeStyle=generals[u.type].color;x.lineWidth=2;x.globalAlpha=.70;x.beginPath();x.ellipse(u.x,u.y+9*actorRatio,16*actorRatio,6*actorRatio,0,0,Math.PI*2);x.stroke();x.restore()}animatedBody(u,idx,(u.hero?98:74)*actorScale,false);if(u.hero){x.save();x.font='bold 10px KaiTi,serif';x.textAlign='center';x.fillStyle='#fff1bf';x.shadowColor='#493b27';x.shadowBlur=3;x.fillText('✦ '+generals[u.type].name,u.x,u.y-64*actorRatio);x.restore()}}
+function drawRally(){const point=s.selectedGeneral?.commandPoint||s.rally;if(!point)return;const {x:px,y:py}=point,t=performance.now()/1000;x.save();x.strokeStyle='#b7d295';x.globalAlpha=.7;x.lineWidth=2;x.beginPath();x.ellipse(px,py+10,24+Math.sin(t*3)*3,9,0,0,Math.PI*2);x.stroke();x.restore();drawFlag(px,py-26,'#598366',Math.floor(t*7)%4)}
+function drawUnit(u){const idx={footman:0,archer:1,spearman:2,mage:3}[u.type];if(u.hero){x.save();x.strokeStyle=s.selectedGeneral===u?'#ffe0a0':generals[u.type].color;x.lineWidth=s.selectedGeneral===u?3:2;x.globalAlpha=.55+.15*Math.sin(performance.now()/300);x.beginPath();x.ellipse(u.x,u.y+11*actorRatio,20*actorRatio,7*actorRatio,0,0,Math.PI*2);x.stroke();x.restore()}if(orderActive(u)){x.save();x.strokeStyle=generals[u.type].color;x.lineWidth=2;x.globalAlpha=.70;x.beginPath();x.ellipse(u.x,u.y+9*actorRatio,16*actorRatio,6*actorRatio,0,0,Math.PI*2);x.stroke();x.restore()}animatedBody(u,idx,(u.hero?98:74)*actorScale,false);if(u.hero){x.save();x.font='bold 10px KaiTi,serif';x.textAlign='center';x.fillStyle='#fff1bf';x.shadowColor='#493b27';x.shadowBlur=3;x.fillText('✦ '+generals[u.type].name,u.x,u.y-64*actorRatio);x.restore()}}
 function drawAllyHealth(u,focused=false){if(u.hp<=0||!Number.isFinite(u.max)||u.max<=0)return;const ratio=clamp(u.hp/u.max,0,1),trail=clamp((u.displayHp??u.hp)/u.max,ratio,1),width=Math.round((u.hero?(focused?54:46):(focused?40:32))*actorRatio),height=focused?5:4,px=Math.round(u.x-width/2),py=Math.round(u.y-(u.hero?53:43)*actorRatio);x.save();x.globalAlpha=focused||ratio<1?1:.65;x.shadowColor='#253e3d44';x.shadowBlur=3;x.fillStyle='#fff3d6';x.beginPath();x.roundRect(px-1,py-1,width+2,height+2,3);x.fill();x.shadowBlur=0;x.fillStyle='#34594dcc';x.beginPath();x.roundRect(px,py,width,height,2);x.fill();if(trail>ratio+.005){x.fillStyle='#e7cb88';x.fillRect(px,py,width*trail,height)}x.fillStyle=ratio>.6?'#65a97a':ratio>.3?'#dcaf4e':'#d76e56';if(ratio>0){x.beginPath();x.roundRect(px,py,Math.max(1,width*ratio),height,Math.min(2,width*ratio/2));x.fill()}if(focused){x.globalAlpha=1;x.font='bold 10px "Microsoft YaHei",sans-serif';x.textAlign='center';x.fillStyle='#fff5d6';x.shadowColor='#294339';x.shadowBlur=3;x.fillText(unitName(u)+' '+Math.ceil(Math.max(0,u.hp))+'/'+u.max,u.x,py-6)}x.restore()}
 function drawAllyBars(){const focused=hoveredAlly();s.units.forEach(u=>drawAllyHealth(u,u===focused))}
 function drawEnemy(e){if(e.type==='boss'){drawBoss(e);return}const flying=e.type==='flyer',size=(flying?flyerTypes[e.mapKey].size:e.type==='beast'?beastTypes[e.animalKey].size:e.type==='brute'?92:74)*actorScale;if(flying)drawFlyer(e);else if(e.type==='beast')drawBeast(e);else animatedBody(e,e.type==='brute'?5:4,size,true);if(flying||e.type==='beast'||e.hp<e.max||e.focus){const aim=enemyAim(e),py=flying?aim.y-size*.42-6:e.y-size*.65-8;const width=38*actorRatio;x.fillStyle='#fff3c9dd';x.beginPath();x.roundRect(e.x-width/2,py,width,5,3);x.fill();x.fillStyle=e.focus?'#eab75a':flying?flyerTypes[e.mapKey].color:'#c76a4d';x.beginPath();x.roundRect(e.x-width/2+1,py+1,(width-2)*clamp(e.hp/e.max,0,1),3,2);x.fill();if(flying){x.font='bold 9px KaiTi,serif';x.textAlign='center';x.fillStyle='#fff0c6';x.shadowColor='#364b3e';x.shadowBlur=2;x.fillText('空',e.x+width/2+6,py+5);x.shadowBlur=0}}}
 function drawFX(){s.fx.forEach(f=>{let a=clamp(f.life/(f.max||.34),0,1);x.save();x.globalAlpha=a;x.shadowColor=f.color;x.shadowBlur=f.kind==='magic'?15:5;if(f.kind==='lightning'){x.strokeStyle=f.color;x.lineWidth=5*a;x.beginPath();f.path.forEach((pt,i)=>{if(i===0){x.moveTo(pt.x,pt.y);return}const last=f.path[i-1];x.lineTo((last.x+pt.x)/2+9,(last.y+pt.y)/2-7);x.lineTo(pt.x,pt.y)});x.stroke();x.strokeStyle='#edf9ff';x.lineWidth=1.5;x.stroke()}else if(f.kind==='heal'){x.strokeStyle=f.color;x.lineWidth=2;x.beginPath();x.ellipse(f.x,f.y+24,18+(1-a)*10,6+(1-a)*3,0,0,Math.PI*2);x.stroke();x.lineWidth=3;x.beginPath();x.moveTo(f.x-4,f.y-(1-a)*15);x.lineTo(f.x+4,f.y-(1-a)*15);x.moveTo(f.x,f.y-4-(1-a)*15);x.lineTo(f.x,f.y+4-(1-a)*15);x.stroke()}else if(f.kind==='impact'){x.strokeStyle=f.color;x.lineWidth=4*a;x.beginPath();x.ellipse(f.x,f.y,12+(1-a)*48,6+(1-a)*20,0,0,Math.PI*2);x.stroke()}else if(f.kind==='arrow'||f.kind==='cursor'){x.strokeStyle=f.color;x.lineWidth=f.kind==='cursor'?5:3;x.beginPath();x.moveTo(f.x,f.y);x.lineTo(f.x-f.vx*.035,f.y-f.vy*.035);x.stroke();if(f.kind==='cursor'){x.fillStyle='#fff8c9';x.fillRect(f.x-3,f.y-3,6,6)}}else if(f.kind==='shell'){x.fillStyle='#7e6047';x.beginPath();x.arc(f.x,f.y,5,0,Math.PI*2);x.fill();x.strokeStyle=f.color;x.lineWidth=2;x.beginPath();x.moveTo(f.x,f.y);x.lineTo(f.x-f.vx*.04,f.y-f.vy*.04);x.stroke()}else if(f.kind==='magic'){let r=6+(1-a)*8;x.fillStyle='#f6dcff';x.beginPath();x.arc(f.x,f.y,r,0,Math.PI*2);x.fill();x.strokeStyle=f.color;x.lineWidth=3;x.beginPath();x.arc(f.x,f.y,r+5,performance.now()/120,performance.now()/120+4.5);x.stroke()}else if(f.kind==='slash'){x.translate(f.x,f.y);x.rotate(f.angle||0);x.strokeStyle=f.color;x.lineWidth=7;x.beginPath();x.arc(0,0,24,-1.05,1.05);x.stroke();x.strokeStyle='#fff7c8';x.lineWidth=2;x.stroke()}else if(f.kind==='thrust'){x.translate(f.x,f.y);x.rotate(f.angle||0);x.strokeStyle=f.color;x.lineWidth=5;x.beginPath();x.moveTo(-28,0);x.lineTo(22,0);x.stroke();x.fillStyle='#fff';x.beginPath();x.moveTo(25,0);x.lineTo(14,-6);x.lineTo(14,6);x.closePath();x.fill()}else{x.fillStyle=f.color;x.fillRect(f.x-2,f.y-2,4,4)}x.restore()});s.texts.forEach(t=>{x.globalAlpha=clamp(t.life,0,1);x.fillStyle=t.color;x.font='900 16px Consolas';x.textAlign='center';x.shadowColor='#111322';x.shadowBlur=2;x.fillText(t.t,t.x,t.y);x.textAlign='left';x.shadowBlur=0;x.globalAlpha=1})}
-function cursor(){if(!run||p.x<0||s.placement||s.spellAim)return;if(s.mergeMode){x.save();x.strokeStyle='#f1d18b';x.lineWidth=3;x.beginPath();x.arc(p.x-5,p.y,7,0,Math.PI*2);x.moveTo(p.x+12,p.y);x.arc(p.x+5,p.y,7,0,Math.PI*2);x.stroke();x.restore();return}let a=zone(),ally=hoveredAlly(),enemy=hoveredEnemy(),t=performance.now()/1000;x.save();x.translate(p.x,p.y);x.shadowColor='#111322';x.shadowBlur=2;if(ally){const heal=ally.hp<ally.max;x.strokeStyle=heal?'#c2f1ac':'#ecf2d0';x.lineWidth=4;x.lineCap='round';const pulse=1+Math.sin(t*7)*.12;x.scale(pulse,pulse);x.beginPath();x.moveTo(-8,0);x.lineTo(8,0);x.moveTo(0,-8);x.lineTo(0,8);x.stroke();x.lineWidth=1.5;x.beginPath();x.arc(0,0,16,t*3,t*3+Math.PI*1.4);x.stroke();x.restore();return}if(enemy){let k=3+Math.floor(t*8)%3;x.strokeStyle='#f6c445';x.lineWidth=3;[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([sx,sy])=>{x.beginPath();x.moveTo(sx*(20+k),sy*12);x.lineTo(sx*12,sy*12);x.lineTo(sx*12,sy*(20+k));x.stroke()});x.restore();return}if(!a){x.strokeStyle='#f7e7c6';x.lineWidth=2;x.beginPath();x.moveTo(-13,0);x.lineTo(-5,0);x.moveTo(13,0);x.lineTo(5,0);x.moveTo(0,-13);x.lineTo(0,-5);x.moveTo(0,13);x.lineTo(0,5);x.stroke();x.restore();return}if(a.built&&['tower','machine'].includes(a.kind)){x.strokeStyle='#ebdfb1';x.lineWidth=2;x.rotate(t*2);x.beginPath();x.arc(0,0,10,0,Math.PI*1.7);x.stroke();x.restore();return}let prog=clamp(s.progress[a.id]/(a.kind==='gold'||a.kind==='wood'?a.rate:a.built?troop[a.type].rate:blueprintFor(a.type).time),0,1);x.fillStyle='#141827cc';x.fillRect(-20,23,40,5);x.fillStyle='#f6c445';x.fillRect(-20,23,40*prog,5);let swing=-.45+Math.sin(t*10*(['gold','wood'].includes(a.kind)?workRate(a.kind==='gold'?'mine':'wood'):1))*.55;if(a.kind==='gold'||a.kind==='wood'){x.rotate(swing);x.strokeStyle='#704526';x.lineWidth=6;x.beginPath();x.moveTo(-2,18);x.lineTo(2,-14);x.stroke();x.strokeStyle='#dfe3d5';x.fillStyle='#c9d0c8';x.lineWidth=3;if(a.kind==='wood'){x.beginPath();x.moveTo(1,-17);x.lineTo(17,-13);x.lineTo(15,-3);x.lineTo(1,-8);x.closePath();x.fill();x.stroke()}else{x.beginPath();x.moveTo(-14,-11);x.quadraticCurveTo(1,-22,18,-10);x.stroke()}}else if(!a.built){x.rotate(swing*.8);x.strokeStyle='#704526';x.lineWidth=6;x.beginPath();x.moveTo(0,18);x.lineTo(0,-12);x.stroke();x.fillStyle='#aab0ae';x.fillRect(-13,-17,26,8)}else{let wave=Math.sin(t*7)*3;x.strokeStyle='#eadfbd';x.lineWidth=4;x.beginPath();x.moveTo(-7,19);x.lineTo(-7,-20);x.stroke();x.fillStyle=troop[a.type].roof;x.beginPath();x.moveTo(-5,-18);x.quadraticCurveTo(8+wave,-13,19,-17);x.lineTo(18,1);x.quadraticCurveTo(7+wave,5,-5,0);x.closePath();x.fill()}x.restore()}
+function cursor(){if(!run||p.x<0||s.placement||s.spellAim)return;if(s.mergeMode){x.save();x.strokeStyle='#f1d18b';x.lineWidth=3;x.beginPath();x.arc(p.x-5,p.y,7,0,Math.PI*2);x.moveTo(p.x+12,p.y);x.arc(p.x+5,p.y,7,0,Math.PI*2);x.stroke();x.restore();return}let {a,ally}=workTarget(),enemy=hoveredEnemy(),t=performance.now()/1000;x.save();x.translate(p.x,p.y);x.shadowColor='#111322';x.shadowBlur=2;if(ally){const heal=ally.hp<ally.max;x.strokeStyle=heal?'#c2f1ac':'#ecf2d0';x.lineWidth=4;x.lineCap='round';const pulse=1+Math.sin(t*7)*.12;x.scale(pulse,pulse);x.beginPath();x.moveTo(-8,0);x.lineTo(8,0);x.moveTo(0,-8);x.lineTo(0,8);x.stroke();x.lineWidth=1.5;x.beginPath();x.arc(0,0,16,t*3,t*3+Math.PI*1.4);x.stroke();x.restore();return}if(enemy){let k=3+Math.floor(t*8)%3;x.strokeStyle='#f6c445';x.lineWidth=3;[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([sx,sy])=>{x.beginPath();x.moveTo(sx*(20+k),sy*12);x.lineTo(sx*12,sy*12);x.lineTo(sx*12,sy*(20+k));x.stroke()});x.restore();return}if(!a){x.strokeStyle='#f7e7c6';x.lineWidth=2;x.beginPath();x.moveTo(-13,0);x.lineTo(-5,0);x.moveTo(13,0);x.lineTo(5,0);x.moveTo(0,-13);x.lineTo(0,-5);x.moveTo(0,13);x.lineTo(0,5);x.stroke();x.restore();return}if(a.built&&['tower','machine'].includes(a.kind)){x.strokeStyle='#ebdfb1';x.lineWidth=2;x.rotate(t*2);x.beginPath();x.arc(0,0,10,0,Math.PI*1.7);x.stroke();x.restore();return}let prog=clamp(s.progress[a.id]/(a.kind==='gold'||a.kind==='wood'?a.rate:a.built?troop[a.type].rate:blueprintFor(a.type).time),0,1);x.fillStyle='#141827cc';x.fillRect(-20,23,40,5);x.fillStyle='#f6c445';x.fillRect(-20,23,40*prog,5);let swing=-.45+Math.sin(t*10*(['gold','wood'].includes(a.kind)?workRate(a.kind==='gold'?'mine':'wood'):1))*.55;if(a.kind==='gold'||a.kind==='wood'){x.rotate(swing);x.strokeStyle='#704526';x.lineWidth=6;x.beginPath();x.moveTo(-2,18);x.lineTo(2,-14);x.stroke();x.strokeStyle='#dfe3d5';x.fillStyle='#c9d0c8';x.lineWidth=3;if(a.kind==='wood'){x.beginPath();x.moveTo(1,-17);x.lineTo(17,-13);x.lineTo(15,-3);x.lineTo(1,-8);x.closePath();x.fill();x.stroke()}else{x.beginPath();x.moveTo(-14,-11);x.quadraticCurveTo(1,-22,18,-10);x.stroke()}}else if(!a.built){x.rotate(swing*.8);x.strokeStyle='#704526';x.lineWidth=6;x.beginPath();x.moveTo(0,18);x.lineTo(0,-12);x.stroke();x.fillStyle='#aab0ae';x.fillRect(-13,-17,26,8)}else{let wave=Math.sin(t*7)*3;x.strokeStyle='#eadfbd';x.lineWidth=4;x.beginPath();x.moveTo(-7,19);x.lineTo(-7,-20);x.stroke();x.fillStyle=troop[a.type].roof;x.beginPath();x.moveTo(-5,-18);x.quadraticCurveTo(8+wave,-13,19,-17);x.lineTo(18,1);x.quadraticCurveTo(7+wave,5,-5,0);x.closePath();x.fill()}x.restore()}
 function drawWeather(){if(activeMap.id==='mountain')return;let t=performance.now()/1000;x.save();x.fillStyle=activeMap.particle;for(let i=0;i<30;i++){let px=(i*127+t*(activeMap.id==='desert'?48:12))%W,py=(i*73-t*(activeMap.id==='volcano'?22:activeMap.id==='forest'?2:-5)+H*100)%H;x.globalAlpha=(activeMap.id==='forest'?.35:.2)+Math.sin(t+i)*.15;x.beginPath();x.ellipse(px,py,activeMap.id==='desert'?7:2,activeMap.id==='desert'?1:2,0,0,Math.PI*2);x.fill()}x.restore()}
 function animateReview(dt){s.time+=dt;s.demoTime=(s.demoTime||0)+dt;[...s.units,...s.enemies].forEach(q=>{const t=(s.demoTime+(q.phase||0)*.12)%4.6,oldX=q.x;q.moving=t<2.2;q.attackSpan=motion.duration(q);q.attack=t>=2.2&&t<3.8?q.attackSpan-((t-2.2)%q.attackSpan):0;q.x=q.originX+(q.moving?Math.sin(t/2.2*Math.PI*2)*18:0);if(q.moving)motion.walk(q,Math.abs(q.x-oldX))});ui.tip.textContent=s.encounterDemo?'上排飞行兽 · 下排决战首领 · 逐帧动作预览':'逐帧动作预览 · 上排普通兵 / 下排将领 · 最右侧为敌军'}
 function loop(now){let elapsed=Math.min(Math.max(0,(now-last)/1000),1);last=now;while(elapsed>.000001&&run&&!paused){const dt=Math.min(elapsed,.035);if(s.animationDemo)animateReview(dt);else step(dt);elapsed-=dt}draw();drawWeather();requestAnimationFrame(loop)}metaUI=new window.MetaUI({profile:()=>profile,progress:()=>progress,stage:()=>campaign.levels[selectedLevel],allowed:()=>!run,purchase:purchaseUpgrade,claim:claimAchievement,warning:()=>profileSaveFailed?'浏览器无法保存升级，当前会话内仍可使用':''});reset();const requestedMap=new URLSearchParams(location.search).get('map');chooseMap(requestedMap||campaign.levels[selectedLevel].mapId);requestAnimationFrame(loop);
