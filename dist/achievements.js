@@ -9,11 +9,11 @@ add('first','first-beast','beasts',1,55,'截住冲城兽','击退第一头地面
 add('first','first-general','generals',1,100,'登台点将','首次召唤任意将领');
 for(const [type,name] of Object.entries(troops))add('first','general-'+type,'general:'+type,1,75,name+'领军','首次召唤'+name+'将领');
 for(const [type,name] of Object.entries(troops))for(const [i,n] of [5,15,25,50].entries())add('recruit',type+'-'+n,'best:'+type,n,[45,90,160,350][i],name+' · '+['小队','列阵','成军','大阵'][i],'单局累计招募 '+n+' 名'+name+'（含阵亡补员）');
-for(const [key,label] of [['gold','矿石'],['wood','木材']])for(const [i,n] of [400,2400].entries())add('gather',key+'-'+n,key,n,[60,160][i],label+(i?'满仓':'入库'),'累计采集 '+n+' '+label+'（含采集机关）');
+for(const [key,label] of [['gold','矿石'],['wood','木材']])for(const [i,n] of [400,2400].entries())add('gather',key+'-'+n,key,n,[60,160][i],label+(i?'满仓':'入库'),'累计采集 '+n+' '+label+'');
 for(const [i,n] of [20,80,250,700].entries())add('hunt','kills-'+n,'kills',n,[45,90,170,300][i],['初捷','破阵','百战','荡寇'][i],'累计击退 '+n+' 名敌军');
 for(const [i,n] of [1,5,15].entries())add('guard','wins-'+n,'wins',n,[60,130,250][i],['初守告捷','五战得胜','守城老将'][i],'赢得 '+n+' 场战斗（可重玩同关）');
 add('guard','flawless','flawless',1,120,'寸土未失','城墙满血时取得一场胜利');
-for(const [key,title,detail,reward] of [['arrowTower','瞭望设防','建成第一座弓箭塔',65],['cannon','火炮上阵','建成第一座炮塔',100],['machine','机关开工','建成第一台采集机关',85],['merges','并营扩军','完成第一次兵营合成',75]])add('build','build-'+key,key,1,reward,title,detail);
+for(const [key,title,detail,reward] of [['arrowTower','瞭望设防','建成第一座弓箭塔',65],['cannon','火炮上阵','建成第一座炮塔',100],['medics','妙手援军','召唤第一名牧师',85],['merges','并营扩军','完成第一次兵营合成',75]])add('build','build-'+key,key,1,reward,title,detail);
 for(const [id,title] of [['healField','甘霖落阵'],['poisonField','百草成毒'],['fireball','赤火破阵'],['lightning','引雷入阵']])add('magic','cast-'+id,'cast:'+id,1,65,title,'首次释放'+root.CombatSkills.spells[id].name);
 add('magic','cast-10','casts',10,120,'术法入门','累计释放 10 次光标术法');
 add('magic','cast-30','casts',30,240,'术法娴熟','累计释放 30 次光标术法');
@@ -27,7 +27,7 @@ function record(raw,entry,result){const next=read(raw),add=(key,n)=>{next.stats[
  for(const type of Object.keys(troops)){const n=entry.recruited[type]||0;next.stats['best:'+type]=Math.max(next.stats['best:'+type],bounded(n,cap['best:'+type]));add('recruits',n);add('general:'+type,entry.generals[type]);add('generals',entry.generals[type]);}
  for(const k of ['gold','wood'])add(k,entry.gathered[k]);
  for(const k of ['camp','arrowTower','cannon','machine'])add(k,entry.built[k]);
- add('merges',entry.merges);add('beasts',entry.beasts);add('kills',result.kills);
+ add('medics',entry.recruited.medic);add('merges',entry.merges);add('beasts',entry.beasts);add('kills',result.kills);
  for(const id of Object.keys(root.CombatSkills.spells)){const n=entry.spells?.[id];add('cast:'+id,n);add('casts',n)}
  add('orders',entry.orders);add('doubleGeneral',entry.doubleGeneral);
  if(result.won){add('wins',1);if(result.perfect)add('flawless',1)}

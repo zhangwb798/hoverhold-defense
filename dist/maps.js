@@ -3,7 +3,9 @@ window.GAME_MAPS = [
  {id:'island',name:'碧海孤岛',tag:'听潮枕浪 · 守望碧海',description:'白沙海岸与椰林港湾',image:'assets/map-island-v14.webp',color:'#268e9c',particle:'#fff1bb',water:'#e9ffff'},
  {id:'forest',name:'森罗幽谷',tag:'古木参天 · 萤火引路',description:'古树、苔石与幽深林谷',image:'assets/map-forest-v14.webp',color:'#466b42',particle:'#c7ee8c',water:'#c4f9de'},
  {id:'volcano',name:'赤焰火山',tag:'熔岩流火 · 镇守赤岭',description:'玄武岩、熔岩与灰烬',image:'assets/map-volcano-v14.webp',color:'#a85d40',particle:'#ffb15b',water:'#ffb265'},
- {id:'desert',name:'流沙绿洲',tag:'驼铃随风 · 绿洲为家',description:'金色沙丘与丝路绿洲',image:'assets/map-desert-v14.webp',color:'#ac813b',particle:'#f5d59e',water:'#d8fff0'}
+ {id:'desert',name:'流沙绿洲',tag:'驼铃随风 · 绿洲为家',description:'金色沙丘与丝路绿洲',image:'assets/map-desert-v14.webp',color:'#ac813b',particle:'#f5d59e',water:'#d8fff0'},
+ {id:'frost',base:'forest',name:'霜渡关',tag:'霜锁古道 · 御敌雪境',description:'雪原、霜甲军与风雪减速',image:'assets/map-forest-v14.webp',color:'#50768b',particle:'#e3f5ff',water:'#e5f8ff'},
+ {id:'mist',base:'desert',name:'雾泽驿',tag:'薄雾沿溪 · 守望夜驿',description:'暮色、雾路与疾行斥候',image:'assets/map-desert-v14.webp',color:'#465d78',particle:'#ccdfbe',water:'#b6e9ed'}
 ];
 const layouts={
  mountain:{plots:[[183,375],[323,375],[183,445],[323,445]],gate:[345,511],spawns:[[515,157],[1070,180],[1120,390]],mines:[[389,80,68,56],[1175,128,74,63],[1225,315,57,58]],trees:[[289,215,107,59],[686,500,96,77],[1030,277,113,83],[1202,459,85,73]],location:'西南临溪'},
@@ -49,7 +51,7 @@ function battlefieldAxis(low,high,limit,scale){
  return {source,screen,forward:value=>map(value,source,screen),inverse:value=>map(value,screen,source)};
 }
 window.GAME_MAPS.forEach(m=>{
- const raw=layouts[m.id],court=courtyards[m.id],[left,top,right,bottom]=cityBounds[m.id];
+ const base=m.base||m.id,raw=layouts[base],court=courtyards[base],[left,top,right,bottom]=cityBounds[base];
  const cityScale=Math.min(.9,Math.sqrt(targetCityArea*1280*720/((right-left)*(bottom-top))));
  const horizontal=battlefieldAxis(left,right,1280,cityScale);
  const vertical=battlefieldAxis(top,bottom,720,cityScale);
@@ -66,6 +68,8 @@ window.GAME_MAPS.forEach(m=>{
  });
  const marker=xy=>{const [x,y]=frame(xy);return {x,y}};
  if(m.id==='island'){m.bridge=marker([754,405]);m.airEntry=frame([85,595]);}
+ if(m.id==='frost'){m.hazard=marker([790,355]);m.spawns=[[1005,184],[880,487],[590,560]].map(frame);}
+ if(m.id==='mist'){m.hazard=marker([690,254]);m.spawns=[[535,180],[1005,235],[345,340]].map(frame);}
  if(m.id==='volcano')m.lava={...marker([690,320]),detour:marker([690,400])};
  m.gate=frame(raw.gate);m.courtyard=court.map(frame);
  m.gateRoof=gateRoofs[m.id]?.map(frame);

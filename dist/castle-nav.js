@@ -9,9 +9,10 @@ function interval(poly,a,b){let enter=0,exit=1;for(let i=0;i<poly.length;i++){co
 function nearestEdge(poly,p){let best=null,d=Infinity;poly.forEach((a,i)=>{const b=poly[(i+1)%poly.length],edge=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),edge)/dot(edge,edge))),q=add(a,edge,t),r=distance(q,p);if(r<d){d=r;best={q,normal:normal(a,b)}}});return best}
 function create(map){
  const scale=map.cityScale||1;
- const inner=map.courtyard.map(point),outer=offset(inner,27*scale),gate=point(map.gate),edge=nearestEdge(inner,gate),at=edge.q,dir=edge.normal,side={x:-dir.y,y:dir.x};
+ const inner=map.courtyard.map(point),outer=offset(inner,(map.wallThickness||27)*scale),gate=point(map.gate),edge=nearestEdge(inner,gate),at=edge.q,dir=edge.normal,side={x:-dir.y,y:dir.x};
  const innerDoor=add(at,dir,-29*scale),outerDoor=add(at,dir,48*scale),attack=add(at,dir,52*scale);
- const portal=[[-34,-29],[60,-29],[60,29],[-34,29]].map(([depth,width])=>add(add(at,dir,depth*scale),side,width*scale));
+ const halfDoor=map.gateWidth?map.gateWidth/(2*scale):29;
+ const portal=[[-34,-halfDoor],[60,-halfDoor],[60,halfDoor],[-34,halfDoor]].map(([depth,width])=>add(add(at,dir,depth*scale),side,width*scale));
  const interior=p=>inside(inner,p),walkable=p=>interior(p)||!inside(outer,p)||inside(portal,p);
  function clear(a,b){const hit=interval(outer,a,b);if(!hit||hit[1]-hit[0]<EPS)return true;const allowed=[interval(inner,a,b),interval(portal,a,b)].filter(Boolean).sort((u,v)=>u[0]-v[0]);let t=hit[0];for(const [from,to] of allowed){if(from<=t+EPS)t=Math.max(t,to);if(t>=hit[1]-EPS)return true}return false}
  const nodes=[innerDoor,outerDoor,...offset(inner,37*scale)],links=nodes.map((p,i)=>nodes.map((q,j)=>i!==j&&clear(p,q)?distance(p,q):Infinity));
@@ -26,7 +27,7 @@ function create(map){
  inner.forEach((a,i)=>{const b=inner[(i+1)%inner.length],n=normal(a,b);if(n.y<.2)return;const footA=add(a,n,38*scale),footB=add(b,n,38*scale);occluders.push({depth:(footA.y+footB.y)/2,points:[{x:a.x,y:a.y-9*scale},{x:b.x,y:b.y-9*scale},footB,footA]})});
  const gateRoof=map.gateRoof?.map(point)??[[-31,-72],[31,-72],[31,-13],[-31,-13]].map(([dx,dy])=>({x:gate.x+dx*scale,y:gate.y+dy*scale}));
  occluders.push({depth:gate.y+2,points:gateRoof});
- return {inner,outer,portal,gate,innerDoor,outerDoor,attack,dir,interior,walkable,clear,route,waypoint,advance,egress,occluders};
+ return {inner,outer,portal,gate,innerDoor,outerDoor,attack,dir,circle:map.circularFortress||null,interior,walkable,clear,route,waypoint,advance,egress,occluders};
 }
 root.CastleNav={create};
 })(typeof window!=='undefined'?window:globalThis);

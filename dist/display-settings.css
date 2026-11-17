@@ -1,0 +1,18 @@
+body.display-managed{min-height:100dvh;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 50% 25%,#486f5c,#173c32 80%)}
+body.display-managed .game-shell{width:min(calc(100vw * var(--view-scale,1)),calc(177.7778dvh * var(--view-scale,1)));max-width:none;padding:0;margin:auto}
+body.display-managed #stage{height:auto!important;min-height:0!important;aspect-ratio:16/9;border-radius:0;box-shadow:0 8px 50px #17382e50}
+body.display-managed .game-shell>footer{display:none}
+.home-illustration{object-fit:contain;object-position:center}
+#startCard .home-wallet{display:none}
+.home-menu{top:31%;right:3.1%;width:22.5%;min-width:210px}
+.home-current{margin-top:17px!important;color:#4d674d!important}
+#battleSettings{width:min(430px,92vw);max-height:90dvh;overflow:auto}
+.display-settings{margin-top:15px;padding-top:12px;border-top:1px solid #bac6ab70}
+.display-settings h3{margin:0 0 10px;color:#587a60;font:700 15px/1.4 KaiTi,serif}
+.display-settings label{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:9px 0;color:#58735d;font:13px/1.6 'Microsoft YaHei',sans-serif}
+.display-settings select{width:66%;max-width:235px;padding:8px 9px;border:1px solid #b7c4a87a;border-radius:8px 4px;background:#e5e8d9;color:#41674e;font:12px/1.4 'Microsoft YaHei',sans-serif;cursor:pointer}
+.display-settings select:focus-visible{outline:2px solid #74966c;outline-offset:2px}
+.display-settings p{font:10px/1.6 'Microsoft YaHei',sans-serif;color:#819174;margin:11px 0 8px}
+.display-settings #fullscreenBtn{width:100%;border:1px solid #b7c4a87a;border-radius:8px 5px;padding:8px;background:#dbe3cb;color:#507051;font:13px KaiTi,serif;cursor:pointer}
+@media(max-height:650px) and (min-width:701px){.home-menu{top:28%;min-width:195px}.home-current{margin-top:9px!important}.home-eyebrow{font-size:10px!important}#startCard .home-navigation>button{min-height:49px}.home-navigation{gap:6px}}
+@media(max-width:700px) and (orientation:portrait){body.display-managed.home-visible .game-shell{width:calc(100vw * var(--view-scale,1))}body.display-managed.home-visible #stage{height:min(100dvh,760px)!important;min-height:560px!important;aspect-ratio:auto}.home-illustration{object-fit:contain;object-position:top;height:auto}.home-mobile-title{display:none}.home-shade{background:linear-gradient(180deg,transparent 18%,#e6e1c956 32%,#e9e5d1 55%,#dedec4)}#startCard.cover-home{background:#e5e3cb}.home-menu{top:auto;bottom:55px;min-width:0;width:auto;right:20px}.home-current{margin-top:17px!important}.home-eyebrow{color:#5d7257!important}.home-footnote{color:#6d805f;text-shadow:none}.display-settings label{font-size:12px}.display-settings select{font-size:11px}}

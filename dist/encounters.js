@@ -1,11 +1,15 @@
 (function(root){'use strict';
 const flyers={
+ frost:{name:'雪翅妖',row:0,hp:82,speed:55,damage:8,interval:1.65,size:94,altitude:42,color:'#b3e5fa'},
+ mist:{name:'雾灯飞魈',row:1,hp:86,speed:63,damage:8,interval:1.45,size:89,altitude:37,color:'#c1df86'},
  island:{name:'潮翼蝠',row:0,hp:54,speed:50,damage:5,interval:1.65,size:82,altitude:39,color:'#92cccd'},
  forest:{name:'藤翼獠蝠',row:0,hp:66,speed:58,damage:6,interval:1.5,size:90,altitude:39,color:'#a4be78'},
  volcano:{name:'熔翼飞蜥',row:1,hp:78,speed:55,damage:8,interval:1.65,size:98,altitude:43,color:'#e8a064'},
  desert:{name:'沙翼毒蝎',row:2,hp:70,speed:65,damage:7,interval:1.4,size:94,altitude:40,color:'#d4bc72'}
 };
 const bosses={
+ frost:{name:'玄霜狼王',sheet:'a',pair:1,hp:2800,speed:20,damage:32,interval:2.3,size:190,reach:76,color:'#a6d7ff',skill:'裂冰踏地',skillDamage:42,radius:67,warning:3.2,cooldown:10,hazard:3,hazardDamage:6},
+ mist:{name:'沼泽夜君',sheet:'b',pair:0,hp:3000,speed:22,damage:34,interval:2.25,size:182,reach:77,color:'#b1d185',skill:'噬影雾潮',skillDamage:39,radius:78,warning:3.0,cooldown:10,hazard:4,hazardDamage:6},
  island:{name:'潮甲蟹王',sheet:'a',pair:0,hp:1400,speed:16,damage:21,interval:2.3,size:188,reach:72,color:'#76b6b1',skill:'怒潮钳击',skillDamage:34,radius:60,warning:3,cooldown:11},
  forest:{name:'古藤獠王',sheet:'a',pair:1,hp:1800,speed:19,damage:25,interval:2.15,size:194,reach:74,color:'#99b272',skill:'古藤震荡',skillDamage:32,radius:62,warning:3.1,cooldown:10.5},
  volcano:{name:'熔脊龙蜥',sheet:'b',pair:0,hp:2300,speed:17,damage:29,interval:2.5,size:202,reach:78,color:'#e4a06a',skill:'熔脊喷发',skillDamage:40,radius:65,warning:3.3,cooldown:11.5,hazard:3,hazardDamage:7},

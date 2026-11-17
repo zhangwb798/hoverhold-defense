@@ -1,0 +1,44 @@
+.start-menu .start-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.start-menu .start-actions #frontierBtn,
+.start-menu .start-actions #endlessBtn { min-width: 102px; padding: 8px 12px; }
+.map-options { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.frontier-dialog { width: min(680px, calc(100% - 24px)); }
+.frontier-dialog h3 { margin: 13px 0 6px; font-size: 15px; }
+.frontier-balance { color: #745931; margin: 3px 0 8px; }
+.frontier-grid, .frontier-difficulties { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.frontier-card { display: flex; flex-direction: column; gap: 5px; padding: 8px; border-radius: 8px; background: #eddfbe; }
+.frontier-card small { flex: 1; }
+.frontier-dialog button:disabled { opacity: .55; cursor: default; }
+.frontier-dialog button[aria-pressed="true"] { background: #9e603e; }
+.boon-dialog { width: min(430px, calc(100% - 24px)); }
+#boonChoices { display: grid; gap: 7px; margin-bottom: 9px; }
+#boonChoices button { display: grid; gap: 3px; text-align: left; }
+#finishEndless { background: #8c6148; }
+.captain-tools {
+  position: absolute; left: 15px; bottom: 75px; z-index: 14;
+  display: flex; flex-wrap: wrap; gap: 5px; max-width: 36%;
+}
+.captain-tools[hidden] { display: none; }
+.captain-tools button {
+  border: 0; border-radius: 8px; background: #466e5b; color: #fff0c9;
+  padding: 6px 9px; font: 12px KaiTi, serif; cursor: pointer;
+}
+.captain-tools button:disabled { opacity: .65; }
+.frontier-story {
+  position: absolute; z-index: 13; left: 14px; top: 112px; max-width: 29%; margin: 0;
+  padding: 5px 8px; border-radius: 8px; color: #fff0c9; background: #3e5c4cdd; font: 12px KaiTi, serif;
+}
+@media (max-width: 800px) {
+  .map-options { display: flex; overflow-x: auto; padding-bottom: 3px; }
+  .map-options button { flex: 0 0 max(80px, calc((100% - 4 * 6px) / 5)); }
+  .frontier-story { top: 94px; }
+}
+@media (max-width: 650px) {
+  .captain-tools { left: 6px; bottom: 33px; max-width: 16%; }
+  .captain-tools button { font-size: 8px; padding: 4px; }
+  .frontier-story { top: 64px; font-size: 8px; max-width: 24%; }
+  .frontier-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  #stage:not(.playing) { min-height: 405px; }
+}

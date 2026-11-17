@@ -1,9 +1,7 @@
 (function(root){'use strict';
 const blueprints={
  arrowTower:{name:'弓箭塔',kind:'tower',cell:0,gold:90,wood:60,time:4,size:108,wall:3,color:'#6199a0'},
- cannon:{name:'炮塔',kind:'tower',cell:1,gold:150,wood:110,time:5,size:104,wall:6,color:'#bc8151'},
- oreMachine:{name:'采矿机关',kind:'machine',cell:2,gold:110,wood:75,time:4,size:96,resource:'gold',color:'#c6a455'},
- woodMachine:{name:'伐木机关',kind:'machine',cell:3,gold:85,wood:100,time:4,size:96,resource:'wood',color:'#79a074'}
+ cannon:{name:'炮塔',kind:'tower',cell:1,gold:150,wood:110,time:5,size:104,wall:6,color:'#bc8151'}
 };
 function campFootprint(map){return {w:Math.round(80*map.cityScale),h:Math.round(48*map.cityScale)}}
 function towerHealth(type,wall){return Math.round((type==='cannon'?340:245)*(1+(wall-1)*.075))}

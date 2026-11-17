@@ -3,16 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#76b8b3">
+  <meta name="theme-color" content="#d9dfbe">
+  <link rel="preload" as="image" href="assets/home-cover-v56.webp">
   <title>悬城守卫 · 云山营地</title>
   <meta name="robots" content="noindex,nofollow">
   <meta name="description" content="青山作伴，临溪筑营。在手绘国风的云山营地中采集、建设与守城。">
-  <link rel="stylesheet" href="styles.css?v=24"><link rel="stylesheet" href="qinglu.css?v=16"><link rel="stylesheet" href="campaign.css?v=16"><link rel="stylesheet" href="commands.css?v=20"><link rel="stylesheet" href="economy.css?v=38"><link rel="stylesheet" href="encounters.css?v=21"><link rel="stylesheet" href="achievements.css?v=25"><link rel="stylesheet" href="guide.css?v=26"><link rel="stylesheet" href="combat-skills.css?v=28">
-  <link rel="stylesheet" href="press-feedback.css?v=33">
-</head>
+  <link rel="stylesheet" href="styles.css?v=58"><link rel="stylesheet" href="qinglu.css?v=58"><link rel="stylesheet" href="campaign.css?v=58"><link rel="stylesheet" href="commands.css?v=58"><link rel="stylesheet" href="economy.css?v=58"><link rel="stylesheet" href="encounters.css?v=58"><link rel="stylesheet" href="achievements.css?v=58"><link rel="stylesheet" href="guide.css?v=58"><link rel="stylesheet" href="combat-skills.css?v=58">
+  <link rel="stylesheet" href="press-feedback.css?v=58">
+  <link rel="stylesheet" href="frontier.css?v=58">
+<link rel="stylesheet" href="battle-v45.css?v=58"><link rel="stylesheet" href="scroll-ui.css?v=58"><link rel="stylesheet" href="hud-counts.css?v=58"><link rel="stylesheet" href="meta-wallet.css?v=58"><link rel="stylesheet" href="command-ui.css?v=58"><link rel="stylesheet" href="home-menu.css?v=58"><link rel="stylesheet" href="display-settings.css?v=58"></head>
 <body><main class="game-shell"><section class="stage" id="stage">
   <canvas id="game" width="1280" height="720" aria-label="水墨边关战场"></canvas>
-  <header class="hud"><div class="logo"><b>悬城守卫<small>INK FRONTIER</small></b></div><div class="resources"><div><i class="coin"></i><small>矿石</small><strong id="gold">120</strong></div><div><i class="log"></i><small>木材</small><strong id="wood">90</strong></div><div><i class="helm">⚔</i><small>剑士</small><strong id="footmen">0</strong></div><div><i class="bow">➶</i><small>弓手</small><strong id="archers">0</strong></div></div><nav class="controls" aria-label="游戏控制"><button type="button" id="settingsBtn" aria-label="设置" aria-haspopup="dialog" aria-controls="battleSettings" title="设置">⚙</button></nav></header>
+  <header class="hud"><div class="logo"><b>悬城守卫<small>INK FRONTIER</small></b></div><div class="resources" aria-label="战场资源与兵种数量"><div class="hud-counter" title="矿石" role="group" aria-label="矿石数量"><svg class="hud-resource-icon" viewBox="0 0 56 60" aria-hidden="true"><g stroke="#3f5048" stroke-width="1.7" stroke-linejoin="round"><path d="M5 45 10 23 24 12 39 17 51 42 43 54 18 56Z" fill="#819cac"/><path d="m10 23 16 5 10-12 3 22-14 17-7-22Z" fill="#acc5c5"/><path d="m5 45 13-12 7 22-7 1Z" fill="#5b7888"/><path d="m39 17 12 25-12-4Z" fill="#64808d"/><path d="m26 28 7 5-7 10 1 8" fill="none" stroke="#f0cf85" stroke-width="3"/><path d="m14 23 10-8 10 2" fill="none" stroke="#dfebd9" stroke-width="2"/></g></svg><small>矿石</small><strong id="gold">120</strong></div><div class="hud-counter" title="木材" role="group" aria-label="木材数量"><svg class="hud-resource-icon" viewBox="0 0 56 60" aria-hidden="true"><g stroke="#4f4b39" stroke-width="1.6" stroke-linejoin="round"><path d="m10 22 26-7 12 13-24 10Z" fill="#896043"/><path d="m10 22 14 16-2 14L7 37Z" fill="#a77a4d"/><path d="m24 38 24-10-2 17-24 7Z" fill="#754f36"/><path d="m8 37 25-8 14 13-25 12Z" fill="#a77746"/><ellipse cx="22" cy="45" rx="10" ry="9" transform="rotate(-22 22 45)" fill="#d9b87b"/><ellipse cx="22" cy="45" rx="5" ry="4.5" transform="rotate(-22 22 45)" fill="none" stroke="#9f7849"/><path d="m29 35 11-4m-12-7 9-3" stroke="#c49961"/><path d="M28 17Q26 7 40 5q2 11-12 12Z" fill="#83a86c" stroke="#507456"/><path d="m28 18 9-9" stroke="#d9df9c"/></g></svg><small>木材</small><strong id="wood">90</strong></div><div class="hud-counter" title="剑士" role="group" aria-label="剑士数量"><i class="hud-avatar hud-avatar-footman" aria-hidden="true"></i><small>剑士</small><strong id="footmen">0</strong></div><div class="hud-counter" title="弓手" role="group" aria-label="弓手数量"><i class="hud-avatar hud-avatar-archer" aria-hidden="true"></i><small>弓手</small><strong id="archers">0</strong></div></div><nav class="controls" aria-label="游戏控制"><button type="button" id="settingsBtn" aria-label="设置" aria-haspopup="dialog" aria-controls="battleSettings" title="设置">⚙</button></nav></header>
   <aside class="tools" aria-label="快捷行动"><button data-action="mine"><i>◆</i><b>采矿</b><em>+</em></button><button data-action="wood"><i>♣</i><b>伐木</b><em>+</em></button><button data-action="footman"><i>⚔</i><b>剑士</b><em>+</em></button><button data-action="archer"><i>➶</i><b>弓手</b><em>+</em></button></aside>
   <div class="castle-life"><span>边关城防</span><div><i id="hpBar"></i></div><b id="hp">100</b></div>
   <div class="wave-card"><small>波次</small><strong><span id="wave">1</span><i>/ 3</i></strong><div class="wave-countdown" role="timer"><span id="waveClockLabel">首波准备</span><div><b id="waveClock">30</b><span>秒</span></div></div><button type="button" class="wave-skip" id="skipPreparation" hidden>跳过准备</button><em id="enemies">0 敌军</em></div>
@@ -21,19 +23,35 @@
   <div class="hover-tip" id="hoverTip">悬停山林、矿洞、地基或敌军</div>
   <div class="modal" id="startCard"><button id="startBtn">开始战斗 <b>→</b></button></div>
   <div class="modal hidden" id="endCard"><div class="crest red">!</div><p>边关失守</p><h1>守到第 <span id="finalWave">1</span> 波</h1><div class="score" id="score"></div><button id="againBtn">再守山河 <b>↻</b></button></div>
-</section><footer><span>悬城守卫 · 山河征途</span><p>五方山河 · 十五重关</p><span>HOVERHOLD</span></footer></main>
+</section><footer><span>悬城守卫 · 山河征途</span><p>七方山河 · 二十一关</p><span>HOVERHOLD</span></footer></main>
 <dialog class="settings-dialog" id="battleSettings" aria-labelledby="settingsTitle">
   <header><h2 id="settingsTitle">设置</h2><button type="button" id="closeSettings" aria-label="关闭设置" autofocus>×</button></header>
   <div class="settings-options">
     <button type="button" id="soundBtn" aria-pressed="true">音乐与音效 <span></span></button>
     <button type="button" id="shakeBtn" aria-pressed="true">画面震感 <span></span></button>
   </div>
+  <section class="display-settings" id="displaySettings" aria-labelledby="displayTitle">
+    <h3 id="displayTitle">画面显示</h3>
+    <label for="display-quality">画质<select id="display-quality" data-display="quality"><option value="low">流畅 · 30帧</option><option value="medium">均衡 · 45帧</option><option value="high">精细 · 60帧</option></select></label>
+    <label for="display-resolution">分辨率<select id="display-resolution" data-display="resolution"><option value="auto">自动适配</option><option value="1280">1280 × 720</option><option value="1600">1600 × 900</option><option value="1920">1920 × 1080</option></select></label>
+    <label for="display-size">画面尺寸<select id="display-size" data-display="size"><option value="fit">适应窗口</option><option value="90">90% · 留出边距</option><option value="80">80% · 紧凑画面</option></select></label>
+    <p id="displaySummary" role="status"></p><button id="fullscreenBtn" type="button">进入全屏</button>
+  </section>
   <div class="settings-options" id="battleActions" hidden>
     <button type="button" id="mapBack">返回主界面</button>
     <button type="button" id="restartBtn">重新开始</button>
     <button type="button" id="settleNowBtn">立即结算</button>
     <p>返回或重开会放弃本局。立即结算保留已获得的击杀与守波奖励。</p>
   </div>
+</dialog>
+<dialog class="settings-dialog frontier-dialog" id="frontierPanel" aria-labelledby="frontierTitle">
+  <header><h2 id="frontierTitle">行装与难度</h2><button id="closeFrontier" type="button" aria-label="关闭行装">×</button></header>
+  <div id="frontierOptions"></div>
+</dialog>
+<dialog class="settings-dialog boon-dialog" id="boonPanel" aria-labelledby="boonTitle">
+  <header><h2 id="boonTitle">波后补给</h2></header>
+  <p id="boonSummary"></p><div id="boonChoices"></div>
+  <button id="finishEndless" type="button">结束并结算</button>
 </dialog>
 <dialog class="guide-screen" id="beginnerGuide" aria-labelledby="guideTitle" aria-describedby="guideSubtitle">
   <div class="guide-shell">
@@ -42,5 +60,5 @@
     <div class="guide-footer"><button type="button" id="guidePrev">← 上一章</button><span id="guideCount" aria-live="polite">1 / 9</span><button type="button" id="guideNext">下一章 →</button></div>
   </div>
 </dialog>
-<script src="maps.js?v=38"></script><script src="campaign.js?v=32"></script><script src="animals.js?v=33"></script><script src="generals.js?v=18"></script><script src="motion-layout.js?v=19"></script><script src="walk-layout.js?v=20"></script><script src="motion.js?v=20"></script><script src="combat-skills.js?v=28"></script><script src="achievements.js?v=27"></script><script src="progression.js?v=36"></script><script src="facilities.js?v=29"></script><script src="meta-ui.js?v=28"></script><script src="encounter-layout.js?v=21"></script><script src="encounters.js?v=38"></script><script src="dock.js?v=21"></script><script src="castle-nav.js?v=34"></script><script src="game.js?v=40"></script><script src="guide.js?v=38"></script><script src="press-feedback.js?v=33"></script></body>
+<script src="maps.js?v=58"></script><script src="campaign.js?v=58"></script><script src="animals.js?v=58"></script><script src="generals.js?v=58"></script><script src="motion-layout.js?v=58"></script><script src="walk-layout.js?v=58"></script><script src="motion.js?v=58"></script><script src="combat-skills.js?v=58"></script><script src="achievements.js?v=58"></script><script src="progression.js?v=58"></script><script src="facilities.js?v=58"></script><script src="meta-ui.js?v=58"></script><script src="encounter-layout.js?v=58"></script><script src="encounters.js?v=58"></script><script src="dock.js?v=58"></script><script src="castle-nav.js?v=58"></script><script src="frontier.js?v=58"></script><script src="enemy-faction-layout.js?v=58"></script><script src="enemy-factions.js?v=58"></script><script src="world-layout.js?v=58"></script><script src="battle-art-layout.js?v=58"></script><script src="battle-art.js?v=58"></script><script src="battle-view.js?v=58"></script><script src="tilemap-data.js?v=58"></script><script src="tile-prop-layout.js?v=58"></script><script src="fortress-layout.js?v=58"></script><script src="fortress-art.js?v=58"></script><script src="terrain-geometry.js?v=58"></script><script src="tile-scene.js?v=58"></script><script src="wardrobe-layout.js?v=58"></script><script src="wardrobe.js?v=58"></script><script src="world-resource-layout.js?v=58"></script><script src="legacy-resources.js?v=58"></script><script src="display-settings.js?v=58"></script><script src="game.js?v=58"></script><script src="guide.js?v=58"></script><script src="home-menu.js?v=58"></script><script src="press-feedback.js?v=58"></script></body>
 </html>
